@@ -18,8 +18,7 @@ class FlowDao(val dbProvider: DatabaseConfig.type = DatabaseConfig) {
   private val flows = TableQuery[FlowTable]
 
   def insert(flow: Flow): Future[Flow] = {
-    val f = flows returning flows.map(_.flowId)
-    db.run(flows += flow)
+    db.run((flows returning flows.map(_.recordId) into ((instance, recordId) => instance.copy(recordId = recordId))) += flow)
   }
 
   private class FlowTable(tag: Tag) extends Table[Flow](tag, "flow") {
@@ -29,7 +28,7 @@ class FlowDao(val dbProvider: DatabaseConfig.type = DatabaseConfig) {
 
     def statusDate = column[String]("status_date")
 
-    def recordId = column[Long]("record_id")
+    def recordId = column[Long]("record_id", O.AutoInc)
 
     def * = (flowId, statusId, statusDate, recordId) <> (Flow.tupled, Flow.unapply)
   }
