@@ -7,7 +7,7 @@ import slick.lifted.TableQuery
 import scala.concurrent.Future
 
 case class Flow(
-                 flowId: Long,
+                 flowId: String,
                  statusId: Long,
                  statusDate: String,
                  recordId: Long = 0L
@@ -17,12 +17,12 @@ class FlowDao(val dbProvider: DatabaseConfig.type = DatabaseConfig) {
   val db = dbProvider.db
   private val flows = TableQuery[FlowTable]
 
-  def insert(flow: Flow): Future[Flow] = {
-    db.run((flows returning flows.map(_.recordId) into ((instance, recordId) => instance.copy(recordId = recordId))) += flow)
+  def insert(flow: Flow): Future[Int] = {
+    db.run(flows += flow)
   }
 
   private class FlowTable(tag: Tag) extends Table[Flow](tag, "flow") {
-    def flowId = column[Long]("flow_id", O.PrimaryKey)
+    def flowId = column[String]("flow_id", O.PrimaryKey)
 
     def statusId = column[Long]("status_id")
 
