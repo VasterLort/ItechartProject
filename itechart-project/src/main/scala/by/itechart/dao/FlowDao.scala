@@ -17,8 +17,8 @@ class FlowDao(val dbProvider: DatabaseConfig.type = DatabaseConfig) {
   val db = dbProvider.db
   private val flows = TableQuery[FlowTable]
 
-  def insert(flow: Flow): Future[Int] = {
-    db.run(flows += flow)
+  def insert(flow: Flow): Future[Flow] = {
+    db.run((flows returning flows.map(_.recordId) into ((instance, recordId) => instance.copy(recordId = recordId))) += flow)
   }
 
   private class FlowTable(tag: Tag) extends Table[Flow](tag, "flow") {

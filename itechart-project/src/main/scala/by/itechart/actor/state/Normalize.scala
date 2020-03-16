@@ -2,14 +2,18 @@ package by.itechart.actor.state
 
 import akka.actor.{Actor, ActorLogging}
 import by.itechart.action.StateNormalize
-import by.itechart.dao.Flow
+import by.itechart.config.AppConfig
+import by.itechart.dao.initialization.Daos
+import by.itechart.dao.{Flow, FlowDao}
 import by.itechart.date.MyDate
 import by.itechart.enums.StateId
-import by.itechart.service.DataSavingService
 
-class Normalize extends Actor with ActorLogging {
+class Normalize(
+                 val flowDao: FlowDao = Daos.flowDao,
+                 val flow: Flow = Flow(AppConfig.configValues.initFlow, StateId.finishId.id, MyDate.getCurrentDate())
+               ) extends Actor with ActorLogging {
   def receive = {
     case message: StateNormalize =>
-      new DataSavingService().insertDataFlow(Flow(message.flowId, StateId.normalizeId.id, MyDate.getCurrentDate()))
+      flowDao.insert(flow.copy(flowId = message.flowId))
   }
 }

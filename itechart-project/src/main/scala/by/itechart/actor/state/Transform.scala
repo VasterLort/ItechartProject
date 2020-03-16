@@ -2,14 +2,18 @@ package by.itechart.actor.state
 
 import akka.actor.{Actor, ActorLogging}
 import by.itechart.action.StateTransform
-import by.itechart.dao.Flow
+import by.itechart.config.AppConfig
+import by.itechart.dao.initialization.Daos
+import by.itechart.dao.{Flow, FlowDao}
 import by.itechart.date.MyDate
 import by.itechart.enums.StateId
-import by.itechart.service.DataSavingService
 
-class Transform extends Actor with ActorLogging {
+class Transform(
+                 val flowDao: FlowDao = Daos.flowDao,
+                 val flow: Flow = Flow(AppConfig.configValues.initFlow, StateId.finishId.id, MyDate.getCurrentDate())
+               ) extends Actor with ActorLogging {
   def receive = {
     case message: StateTransform =>
-      new DataSavingService().insertDataFlow(Flow(message.flowId, StateId.transformId.id, MyDate.getCurrentDate()))
+      flowDao.insert(flow.copy(flowId = message.flowId))
   }
 }

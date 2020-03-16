@@ -1,0 +1,1 @@
+CREATE INDEX ON flow (status_id);
