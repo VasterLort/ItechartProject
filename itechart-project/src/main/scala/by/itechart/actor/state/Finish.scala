@@ -14,6 +14,7 @@ class Finish(
             ) extends Actor with ActorLogging {
   def receive = {
     case message: StateFinish =>
-      flowDao.insert(flow.copy(flowId = message.flowId))
+      val updatedFlow = flow.copy(flowId = message.flowId)
+      log.info(s"StateFinish: StatusID = ${updatedFlow.statusId}, FlowId = ${updatedFlow.flowId}")
   }
 }
