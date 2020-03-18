@@ -10,10 +10,12 @@ import by.itechart.enums.StateId
 
 class Start(
              val flowDao: FlowDao = Daos.flowDao,
-             val flow: Flow = Flow(AppConfig.configValues.initFlow, StateId.finishId.id, MyDate.getCurrentDate())
+             val flow: Flow = Flow(AppConfig.configValues.initFlow, StateId.startId.id, MyDate.getCurrentDate())
            ) extends Actor with ActorLogging {
   def receive = {
-    case message: StateStart =>
-      flowDao.insert(flow.copy(flowId = message.flowId))
+    case message: RunStartState =>
+      val updatedFlow = flow.copy(flowId = message.flowId)
+      log.info(s"StateStart: StatusId = ${updatedFlow.statusId}, FlowId = ${updatedFlow.flowId}")
+      message.statesToActor(StateId.retrieveId.id) ! RunRetrievalState(message.flowId, message.statesToActor)
   }
 }

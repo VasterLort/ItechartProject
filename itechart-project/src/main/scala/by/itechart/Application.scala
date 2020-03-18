@@ -1,19 +1,14 @@
 package by.itechart
 
 import akka.actor.{ActorSystem, Props}
-import by.itechart.action._
+import by.itechart.action.{InitStartState, InitTransformationState}
 import by.itechart.actor.SupervisorActor
 
 object Application extends App {
   val system = ActorSystem("actor-system")
   val supervisor = system.actorOf(Props[SupervisorActor])
-  supervisor ! StateStart("1")
-  supervisor ! StateRetrieve("2")
-  supervisor ! StateTransform("3")
-  supervisor ! StateNormalize("4")
-  supervisor ! StateValidate("5")
-  supervisor ! StateLoad("6")
-  supervisor ! StateFinish("7")
+  supervisor ! InitStartState("1")
+  supervisor ! InitTransformationState("2")
   Thread.sleep(2000)
   system.terminate()
 }
