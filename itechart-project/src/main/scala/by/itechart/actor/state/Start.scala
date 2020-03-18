@@ -1,6 +1,6 @@
 package by.itechart.actor.state
 
-import akka.actor.{Actor, ActorLogging, Props}
+import akka.actor.{Actor, ActorLogging}
 import by.itechart.action._
 import by.itechart.config.AppConfig
 import by.itechart.dao.initialization.Daos
@@ -13,9 +13,9 @@ class Start(
              val flow: Flow = Flow(AppConfig.configValues.initFlow, StateId.startId.id, MyDate.getCurrentDate())
            ) extends Actor with ActorLogging {
   def receive = {
-    case message: StateStart =>
+    case message: RunStartState =>
       val updatedFlow = flow.copy(flowId = message.flowId)
       log.info(s"StateStart: StatusId = ${updatedFlow.statusId}, FlowId = ${updatedFlow.flowId}")
-      context.actorOf(Props(new Retrieve()), name = message.flowId) ! StateRetrieve(message.flowId)
+      message.statesToActor(StateId.retrieveId.id) ! RunRetrievalState(message.flowId, message.statesToActor)
   }
 }
