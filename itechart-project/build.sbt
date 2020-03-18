@@ -10,7 +10,7 @@ flywayLocations += "db/migration"
 
 libraryDependencies += "com.typesafe.slick" %% "slick" % "3.3.2"
 libraryDependencies += "com.github.tminglei" %% "slick-pg" % "0.18.1"
-libraryDependencies += "org.postgresql" % "postgresql" % "9.3-1100-jdbc41"
+libraryDependencies += "org.postgresql" % "postgresql" % "42.2.11"
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
-libraryDependencies += "org.flywaydb" % "flyway-sbt" % "4.2.0"
+libraryDependencies += "org.flywaydb" % "flyway-core" % "6.3.1"
 

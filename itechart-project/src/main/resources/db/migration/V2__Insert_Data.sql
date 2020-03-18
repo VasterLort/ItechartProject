@@ -1,3 +1,4 @@
+INSERT INTO status (status_name)
 VALUES
    ('START'),
    ('RETRIEVE'),

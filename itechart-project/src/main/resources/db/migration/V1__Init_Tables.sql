@@ -1,10 +1,10 @@
-create TABLE status(
+CREATE TABLE status(
 	status_id BIGSERIAL,
 	status_name VARCHAR (50) NOT NULL,
 	PRIMARY KEY (status_id)
 );
 
-create TABLE flow(
+CREATE TABLE flow(
     record_id BIGSERIAL,
 	flow_id BIGINT,
 	status_id BIGINT NOT NULL,
