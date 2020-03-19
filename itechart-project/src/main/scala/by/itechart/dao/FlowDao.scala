@@ -13,12 +13,18 @@ case class Flow(
                  recordId: Long = 0L
                )
 
-class FlowDao(val dbProvider: DatabaseConfig.type = DatabaseConfig) {
-  val db = dbProvider.db
+class FlowDao(
+               private val dbProvider: DatabaseConfig.type = DatabaseConfig
+             ) {
+  private val db = dbProvider.db
   private val flows = TableQuery[FlowTable]
 
   def insert(flow: Flow): Future[Flow] = {
     db.run((flows returning flows.map(_.recordId) into ((instance, recordId) => instance.copy(recordId = recordId))) += flow)
+  }
+
+  def getById(flowId: String, statusId: Long): Future[Flow] = {
+    db.run(flows.filter(flow => flow.flowId === flowId && flow.statusId === statusId).result.head)
   }
 
   private class FlowTable(tag: Tag) extends Table[Flow](tag, "flow") {
