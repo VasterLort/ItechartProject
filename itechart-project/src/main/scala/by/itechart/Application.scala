@@ -1,15 +1,32 @@
 package by.itechart
 
 import akka.actor.{ActorSystem, Props}
-import by.itechart.action.{InitNormalizeState, InitRetrieveState, InitStartState}
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.server.RouteConcatenation
 import by.itechart.actor.SupervisorActor
+import by.itechart.config.AppConfig
+import by.itechart.service.SupervisorService
+import by.itechart.swagger.Swagger
+import ch.megard.akka.http.cors.scaladsl.CorsDirectives.cors
 
-object Application extends App {
-  val system = ActorSystem("actor-system")
+import scala.io.StdIn
+
+object Application extends App with RouteConcatenation {
+  implicit val system = ActorSystem("actor-system")
+  sys.addShutdownHook(system.terminate())
+
+  implicit val executionContext = system.dispatcher
+
   val supervisor = system.actorOf(Props[SupervisorActor])
-  supervisor ! InitStartState("22")
-  supervisor ! InitNormalizeState("2")
-  supervisor ! InitRetrieveState("18")
-  Thread.sleep(5000)
-  system.terminate()
+
+  val routes =
+    cors()(
+      new SupervisorService(supervisor).route ~
+        Swagger.routes)
+
+  val bindingFuture = Http().bindAndHandle(routes, "0.0.0.0", AppConfig.configValues.port)
+  StdIn.readLine()
+  bindingFuture
+    .flatMap(_.unbind())
+    .onComplete(_ => system.terminate())
 }

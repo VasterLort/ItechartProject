@@ -23,8 +23,8 @@ class FlowDao(
     db.run((flows returning flows.map(_.recordId) into ((instance, recordId) => instance.copy(recordId = recordId))) += flow)
   }
 
-  def getById(flowId: String, statusId: Long): Future[Flow] = {
-    db.run(flows.filter(flow => flow.flowId === flowId && flow.statusId === statusId).result.head)
+  def getById(flowId: String, statusId: Long): Future[Option[Flow]] = {
+    db.run(flows.filter(flow => flow.flowId === flowId && flow.statusId === statusId).result.headOption)
   }
 
   private class FlowTable(tag: Tag) extends Table[Flow](tag, "flow") {

@@ -13,7 +13,7 @@ class DatabaseService(
 
   def getFlowById(flowId: String, statusId: Long): Future[Notice] = {
     flowDao.getById(flowId, statusId).map {
-      case res if res.flowId == flowId && res.statusId == statusId => SuccessfulNotice(res)
+      case Some(res) if res.flowId == flowId && res.statusId == statusId => SuccessfulNotice(res)
       case _ => FailureNotice()
     }
   }
