@@ -5,8 +5,7 @@ import com.typesafe.config.ConfigFactory
 case class AppConfig(
                       dbUrl: String,
                       dbUsername: String,
-                      dbPassword: String,
-                      initFlow: String
+                      dbPassword: String
                     )
 
 object AppConfig {
@@ -14,6 +13,5 @@ object AppConfig {
   lazy val configValues = AppConfig(
     configLoader.getString("database.url"),
     configLoader.getString("database.user"),
-    configLoader.getString("database.password"),
-    configLoader.getString("flow.initFlow"))
+    configLoader.getString("database.password"))
 }
