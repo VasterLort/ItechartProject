@@ -9,7 +9,6 @@ import by.itechart.enums.StateId
 import by.itechart.service.DatabaseService
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class TransformActor(
@@ -19,24 +18,20 @@ class TransformActor(
 
   def receive = {
     case message: RunTransformState =>
-      ds.getFlowById(message.flowId, StateId.transformId.id).flatMap { result =>
-        if (result.isInstanceOf[SuccessfulNotice]) {
+      ds.getFlowById(message.flowId, StateId.transformId.id).map {
+        case res: SuccessfulNotice =>
           (message.statesToActor(StateId.normalizeId.id) ?
-            PassToNormalizeState(
-              result.asInstanceOf[SuccessfulNotice].flow.copy(statusId = StateId.normalizeId.id, statusDate = MyDate.getCurrentDate()),
-              message.statesToActor))
+            PassToNormalizeState(res.flow.copy(statusId = StateId.normalizeId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor))
             .mapTo[Notice]
-        } else Future.successful(result.asInstanceOf[FailureNotice])
+        case res: FailureNotice => res
       }
     case message: PassToTransformState =>
-      ds.insertFlow(message.flow).flatMap { result =>
-        if (result.isInstanceOf[SuccessfulNotice]) {
+      ds.insertFlow(message.flow).map {
+        case res: SuccessfulNotice =>
           (message.statesToActor(StateId.normalizeId.id) ?
-            PassToNormalizeState(
-              result.asInstanceOf[SuccessfulNotice].flow.copy(statusId = StateId.normalizeId.id, statusDate = MyDate.getCurrentDate()),
-              message.statesToActor))
+            PassToNormalizeState(res.flow.copy(statusId = StateId.normalizeId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor))
             .mapTo[Notice]
-        } else Future.successful(result.asInstanceOf[FailureNotice])
+        case res: FailureNotice => res
       }
   }
 }

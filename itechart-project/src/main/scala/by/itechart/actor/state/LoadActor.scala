@@ -9,7 +9,6 @@ import by.itechart.enums.StateId
 import by.itechart.service.DatabaseService
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class LoadActor(
@@ -19,24 +18,20 @@ class LoadActor(
 
   def receive = {
     case message: RunLoadState =>
-      ds.getFlowById(message.flowId, StateId.loadId.id).flatMap { result =>
-        if (result.isInstanceOf[SuccessfulNotice]) {
+      ds.getFlowById(message.flowId, StateId.loadId.id).map {
+        case res: SuccessfulNotice =>
           (message.statesToActor(StateId.finishId.id) ?
-            PassToFinishState(
-              result.asInstanceOf[SuccessfulNotice].flow.copy(statusId = StateId.finishId.id, statusDate = MyDate.getCurrentDate()),
-              message.statesToActor))
+            PassToFinishState(res.flow.copy(statusId = StateId.finishId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor))
             .mapTo[Notice]
-        } else Future.successful(result.asInstanceOf[FailureNotice])
+        case res: FailureNotice => res
       }
     case message: PassToLoadState =>
-      ds.insertFlow(message.flow).flatMap { result =>
-        if (result.isInstanceOf[SuccessfulNotice]) {
+      ds.insertFlow(message.flow).map {
+        case res: SuccessfulNotice =>
           (message.statesToActor(StateId.finishId.id) ?
-            PassToFinishState(
-              result.asInstanceOf[SuccessfulNotice].flow.copy(statusId = StateId.finishId.id, statusDate = MyDate.getCurrentDate()),
-              message.statesToActor))
+            PassToFinishState(res.flow.copy(statusId = StateId.finishId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor))
             .mapTo[Notice]
-        } else Future.successful(result.asInstanceOf[FailureNotice])
+        case res: FailureNotice => res
       }
   }
 }

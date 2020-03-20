@@ -9,7 +9,6 @@ import by.itechart.enums.StateId
 import by.itechart.service.DatabaseService
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class NormalizeActor(
@@ -19,24 +18,20 @@ class NormalizeActor(
 
   def receive = {
     case message: RunNormalizeState =>
-      ds.getFlowById(message.flowId, StateId.normalizeId.id).flatMap { result =>
-        if (result.isInstanceOf[SuccessfulNotice]) {
+      ds.getFlowById(message.flowId, StateId.normalizeId.id).map {
+        case res: SuccessfulNotice =>
           (message.statesToActor(StateId.validateId.id) ?
-            PassToValidateState(
-              result.asInstanceOf[SuccessfulNotice].flow.copy(statusId = StateId.validateId.id, statusDate = MyDate.getCurrentDate()),
-              message.statesToActor))
+            PassToValidateState(res.flow.copy(statusId = StateId.validateId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor))
             .mapTo[Notice]
-        } else Future.successful(result.asInstanceOf[FailureNotice])
+        case res: FailureNotice => res
       }
     case message: PassToNormalizeState =>
-      ds.insertFlow(message.flow).flatMap { result =>
-        if (result.isInstanceOf[SuccessfulNotice]) {
+      ds.insertFlow(message.flow).map {
+        case res: SuccessfulNotice =>
           (message.statesToActor(StateId.validateId.id) ?
-            PassToValidateState(
-              result.asInstanceOf[SuccessfulNotice].flow.copy(statusId = StateId.validateId.id, statusDate = MyDate.getCurrentDate()),
-              message.statesToActor))
+            PassToValidateState(res.flow.copy(statusId = StateId.validateId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor))
             .mapTo[Notice]
-        } else Future.successful(result.asInstanceOf[FailureNotice])
+        case res: FailureNotice => res
       }
   }
 }

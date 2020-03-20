@@ -12,22 +12,16 @@ class DatabaseService(
                      ) {
 
   def getFlowById(flowId: String, statusId: Long): Future[Notice] = {
-    flowDao.getById(flowId, statusId).flatMap { result =>
-      if (result.flowId == flowId && result.statusId == statusId) {
-        Future.successful(SuccessfulNotice(result))
-      } else {
-        Future.successful(FailureNotice())
-      }
+    flowDao.getById(flowId, statusId).map {
+      case res if res.flowId == flowId && res.statusId == statusId => SuccessfulNotice(res)
+      case _ => FailureNotice()
     }
   }
 
   def insertFlow(flow: Flow): Future[Notice] = {
-    flowDao.insert(flow).flatMap { result =>
-      if (result.isInstanceOf[Flow]) {
-        Future.successful(SuccessfulNotice(result))
-      } else {
-        Future.successful(FailureNotice())
-      }
+    flowDao.insert(flow).map {
+      case res: Flow => SuccessfulNotice(res)
+      case _ => FailureNotice()
     }
   }
 }
