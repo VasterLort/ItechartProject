@@ -25,156 +25,146 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val initializationLoadState = jsonFormat1(InitLoadState)
 }
 
-@Path("/states")
+@Path("/flows/{flowId}/states")
 class SupervisorService(supervisor: ActorRef)(implicit executionContext: ExecutionContext) extends Directives with JsonSupport {
   implicit val timeout = Timeout(10.seconds)
 
   val route =
-    pathPrefix("states") {
-      initStartState ~ initRetrievalState ~ initTransformationState ~
-        initNormalizationState ~ initValidationState ~ initLoadState
+    pathPrefix("flows" / Segment) { flowId =>
+      pathPrefix("states") {
+        initStartState(flowId) ~ initRetrievalState(flowId) ~ initTransformationState(flowId) ~
+          initNormalizationState(flowId) ~ initValidationState(flowId) ~ initLoadState(flowId)
+      }
     }
 
   @POST
   @Consumes(Array("application/json"))
-  @Path("start/flows/{flowId}")
+  @Path("starting")
   @Operation(
     parameters = Array(
       new Parameter(name = "flowId", in = ParameterIn.PATH, required = true,
         schema = new Schema(implementation = classOf[String])),
     ),
   )
-  def initStartState =
-    pathPrefix("start") {
-      pathPrefix("flows" / Segment) { flowId =>
-        pathEndOrSingleSlash {
-          post {
-            val res = (supervisor ? InitStartState(flowId)).map {
-              case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
-              case _: FailureNotice => HttpResponse(StatusCodes.BadRequest)
-            }
-            complete(res)
+  def initStartState(flowId: String) =
+    pathPrefix("starting") {
+      pathEndOrSingleSlash {
+        post {
+          val res = (supervisor ? InitStartState(flowId)).map {
+            case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
+            case _: FailureNotice => HttpResponse(StatusCodes.BadRequest)
           }
+          complete(res)
         }
       }
     }
 
   @POST
   @Consumes(Array("application/json"))
-  @Path("retrieval/flows/{flowId}")
+  @Path("retrieving")
   @Operation(
     parameters = Array(
       new Parameter(name = "flowId", in = ParameterIn.PATH, required = true,
         schema = new Schema(implementation = classOf[String])),
     ),
   )
-  def initRetrievalState =
-    pathPrefix("retrieval") {
-      pathPrefix("flows" / Segment) { flowId =>
-        pathEndOrSingleSlash {
-          post {
-            val res = (supervisor ? InitRetrievalState(flowId)).map {
-              case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
-              case _: FailureNotice => HttpResponse(StatusCodes.BadRequest)
-            }
-            complete(res)
+  def initRetrievalState(flowId: String) =
+    pathPrefix("retrieving") {
+      pathEndOrSingleSlash {
+        post {
+          val res = (supervisor ? InitRetrievalState(flowId)).map {
+            case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
+            case _: FailureNotice => HttpResponse(StatusCodes.BadRequest)
           }
+          complete(res)
         }
       }
     }
 
   @POST
   @Consumes(Array("application/json"))
-  @Path("transformation/flows/{flowId}")
+  @Path("transforming")
   @Operation(
     parameters = Array(
       new Parameter(name = "flowId", in = ParameterIn.PATH, required = true,
         schema = new Schema(implementation = classOf[String])),
     ),
   )
-  def initTransformationState =
-    pathPrefix("transformation") {
-      pathPrefix("flows" / Segment) { flowId =>
-        pathEndOrSingleSlash {
-          post {
-            val res = (supervisor ? InitTransformationState(flowId)).map {
-              case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
-              case _: FailureNotice => HttpResponse(StatusCodes.BadRequest)
-            }
-            complete(res)
+  def initTransformationState(flowId: String) =
+    pathPrefix("transforming") {
+      pathEndOrSingleSlash {
+        post {
+          val res = (supervisor ? InitTransformationState(flowId)).map {
+            case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
+            case _: FailureNotice => HttpResponse(StatusCodes.BadRequest)
           }
+          complete(res)
         }
       }
     }
 
   @POST
   @Consumes(Array("application/json"))
-  @Path("normalization/flows/{flowId}")
+  @Path("normalizing")
   @Operation(
     parameters = Array(
       new Parameter(name = "flowId", in = ParameterIn.PATH, required = true,
         schema = new Schema(implementation = classOf[String])),
     ),
   )
-  def initNormalizationState =
-    pathPrefix("normalization") {
-      pathPrefix("flows" / Segment) { flowId =>
-        pathEndOrSingleSlash {
-          post {
-            val res = (supervisor ? InitNormalizationState(flowId)).map {
-              case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
-              case _: FailureNotice => HttpResponse(StatusCodes.BadRequest)
-            }
-            complete(res)
+  def initNormalizationState(flowId: String) =
+    pathPrefix("normalizing") {
+      pathEndOrSingleSlash {
+        post {
+          val res = (supervisor ? InitNormalizationState(flowId)).map {
+            case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
+            case _: FailureNotice => HttpResponse(StatusCodes.BadRequest)
           }
+          complete(res)
         }
       }
     }
 
   @POST
   @Consumes(Array("application/json"))
-  @Path("validation/flows/{flowId}")
+  @Path("validating")
   @Operation(
     parameters = Array(
       new Parameter(name = "flowId", in = ParameterIn.PATH, required = true,
         schema = new Schema(implementation = classOf[String])),
     ),
   )
-  def initValidationState =
-    pathPrefix("validation") {
-      pathPrefix("flows" / Segment) { flowId =>
-        pathEndOrSingleSlash {
-          post {
-            val res = (supervisor ? InitValidationState(flowId)).map {
-              case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
-              case _: FailureNotice => HttpResponse(StatusCodes.BadRequest)
-            }
-            complete(res)
+  def initValidationState(flowId: String) =
+    pathPrefix("validating") {
+      pathEndOrSingleSlash {
+        post {
+          val res = (supervisor ? InitValidationState(flowId)).map {
+            case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
+            case _: FailureNotice => HttpResponse(StatusCodes.BadRequest)
           }
+          complete(res)
         }
       }
     }
 
   @POST
   @Consumes(Array("application/json"))
-  @Path("load/flows/{flowId}")
+  @Path("loading")
   @Operation(
     parameters = Array(
       new Parameter(name = "flowId", in = ParameterIn.PATH, required = true,
         schema = new Schema(implementation = classOf[String])),
     ),
   )
-  def initLoadState =
-    pathPrefix("load") {
-      pathPrefix("flows" / Segment) { flowId =>
-        pathEndOrSingleSlash {
-          post {
-            val res = (supervisor ? InitLoadState(flowId)).map {
-              case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
-              case _: FailureNotice => HttpResponse(StatusCodes.BadRequest)
-            }
-            complete(res)
+  def initLoadState(flowId: String) =
+    pathPrefix("loading") {
+      pathEndOrSingleSlash {
+        post {
+          val res = (supervisor ? InitLoadState(flowId)).map {
+            case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
+            case _: FailureNotice => HttpResponse(StatusCodes.BadRequest)
           }
+          complete(res)
         }
       }
     }
