@@ -12,24 +12,24 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-class LoadActor(
-                 private val ds: DatabaseService = new DatabaseService
-               ) extends Actor with ActorLogging {
+class TransformationActor(
+                      private val ds: DatabaseService = new DatabaseService
+                    ) extends Actor with ActorLogging {
   implicit val timeout = Timeout(10.seconds)
 
   def receive = {
-    case message: RunLoadState =>
-      ds.getFlowById(message.flowId, StateId.loadId.id).flatMap {
+    case message: RunTransformationState =>
+      ds.getFlowById(message.flowId, StateId.transformationId.id).flatMap {
         case res: SuccessfulNotice =>
-          message.statesToActor(StateId.finishId.id) ?
-            PassToFinishState(res.flow.copy(statusId = StateId.finishId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor)
+          message.statesToActor(StateId.normalizationId.id) ?
+            PassToNormalizationState(res.flow.copy(statusId = StateId.normalizationId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor)
         case res: FailureNotice => Future.successful(res)
       }.mapTo[Notice].pipeTo(sender())
-    case message: PassToLoadState =>
+    case message: PassToTransformationState =>
       ds.insertFlow(message.flow).flatMap {
         case res: SuccessfulNotice =>
-          message.statesToActor(StateId.finishId.id) ?
-            PassToFinishState(res.flow.copy(statusId = StateId.finishId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor)
+          message.statesToActor(StateId.normalizationId.id) ?
+            PassToNormalizationState(res.flow.copy(statusId = StateId.normalizationId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor)
         case res: FailureNotice => Future.successful(res)
       }.mapTo[Notice].pipeTo(sender())
   }

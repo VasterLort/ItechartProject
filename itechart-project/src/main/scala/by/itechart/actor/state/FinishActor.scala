@@ -1,10 +1,12 @@
 package by.itechart.actor.state
 
 import akka.actor.{Actor, ActorLogging}
+import akka.pattern.pipe
 import akka.util.Timeout
-import by.itechart.action.PassToFinishState
+import by.itechart.action.{Notice, PassToFinishState}
 import by.itechart.service.DatabaseService
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
 class FinishActor(
@@ -14,6 +16,6 @@ class FinishActor(
 
   def receive = {
     case message: PassToFinishState =>
-      ds.insertFlow(message.flow)
+      ds.insertFlow(message.flow).mapTo[Notice].pipeTo(sender())
   }
 }
