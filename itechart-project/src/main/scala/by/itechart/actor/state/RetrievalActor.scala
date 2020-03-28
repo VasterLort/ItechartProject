@@ -20,17 +20,17 @@ class RetrievalActor(
   def receive = {
     case message: RunRetrievalState =>
       ds.getFlowById(message.flowId, StateId.retrievalId.id).flatMap {
-        case res: SuccessfulNotice =>
+        case res: SuccessfulRequest =>
           message.statesToActor(StateId.transformationId.id) ?
             PassToTransformationState(res.flow.copy(statusId = StateId.transformationId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor)
-        case res: FailureNotice => Future.successful(res)
+        case res: FailureRequest => Future.successful(res)
       }.mapTo[Notice].pipeTo(sender())
     case message: PassToRetrievalState =>
-      ds.insertFlow(message.flow).flatMap {
-        case res: SuccessfulNotice =>
+      ds.insertRetrievalFlow(message.flow).flatMap {
+        case res: SuccessfulRequest =>
           message.statesToActor(StateId.transformationId.id) ?
             PassToTransformationState(res.flow.copy(statusId = StateId.transformationId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor)
-        case res: FailureNotice => Future.successful(res)
+        case res: FailureRequest => Future.successful(res)
       }.mapTo[Notice].pipeTo(sender())
   }
 }

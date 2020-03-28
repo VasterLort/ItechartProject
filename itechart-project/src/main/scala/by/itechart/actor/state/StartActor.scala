@@ -22,17 +22,17 @@ class StartActor(
   def receive = {
     case message: PassToStartState =>
       ds.insertFlow(Flow(UUID.random.toString, StateId.startId.id, MyDate.getCurrentDate())).flatMap {
-        case res: SuccessfulNotice =>
+        case res: SuccessfulRequest =>
           message.statesToActor(StateId.retrievalId.id) ?
             PassToRetrievalState(res.flow.copy(statusId = StateId.retrievalId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor)
-        case res: FailureNotice => Future.successful(res)
+        case res: FailureRequest => Future.successful(res)
       }.mapTo[Notice].pipeTo(sender())
     case message: RunStartState =>
       ds.getFlowById(message.flowId, StateId.startId.id).flatMap {
-        case res: SuccessfulNotice =>
+        case res: SuccessfulRequest =>
           message.statesToActor(StateId.retrievalId.id) ?
             PassToRetrievalState(res.flow.copy(statusId = StateId.retrievalId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor)
-        case res: FailureNotice => Future.successful(res)
+        case res: FailureRequest => Future.successful(res)
       }.mapTo[Notice].pipeTo(sender())
   }
 }

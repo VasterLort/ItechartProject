@@ -41,3 +41,10 @@ libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
 libraryDependencies += "org.flywaydb" % "flyway-core" % "6.3.1"
 
 libraryDependencies += "io.jvm.uuid" %% "scala-uuid" % "0.3.1"
+
+libraryDependencies += "com.jcraft" % "jsch" % "0.1.55"
+
+libraryDependencies += "commons-io" % "commons-io" % "2.6"
+
+libraryDependencies += "org.apache.poi" % "poi" % "4.1.2"
+libraryDependencies += "org.apache.poi" % "poi-ooxml" % "4.1.2"

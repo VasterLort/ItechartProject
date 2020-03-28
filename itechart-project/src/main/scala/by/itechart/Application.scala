@@ -24,7 +24,7 @@ object Application extends App with RouteConcatenation {
       new SupervisorService(supervisor).route ~
         Swagger.routes)
 
-  val bindingFuture = Http().bindAndHandle(routes, "0.0.0.0", AppConfig.configValues.port)
+  val bindingFuture = Http().bindAndHandle(routes, "0.0.0.0", AppConfig.configValues.httpPort)
   StdIn.readLine()
   bindingFuture
     .flatMap(_.unbind())

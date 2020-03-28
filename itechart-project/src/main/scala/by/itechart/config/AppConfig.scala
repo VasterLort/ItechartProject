@@ -6,7 +6,13 @@ case class AppConfig(
                       dbUrl: String,
                       dbUsername: String,
                       dbPassword: String,
-                      port: Int
+                      sftpHost: String,
+                      sftpPort: Int,
+                      sftpUsername: String,
+                      sftpPassword: String,
+                      sftpPath: String,
+                      resourcePath: String,
+                      httpPort: Int
                     )
 
 object AppConfig {
@@ -15,5 +21,11 @@ object AppConfig {
     configLoader.getString("database.url"),
     configLoader.getString("database.user"),
     configLoader.getString("database.password"),
-    configLoader.getInt("connection.port"))
+    configLoader.getString("sftp.host"),
+    configLoader.getInt("sftp.port"),
+    configLoader.getString("sftp.username"),
+    configLoader.getString("sftp.password"),
+    configLoader.getString("sftp.path"),
+    configLoader.getString("general.resourcePath"),
+    configLoader.getInt("http.port"))
 }

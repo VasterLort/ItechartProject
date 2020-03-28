@@ -48,8 +48,8 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
       pathEndOrSingleSlash {
         post {
           val res = (supervisor ? CreateNewFlow()).map {
-            case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
-            case _: FailureNotice => HttpResponse(StatusCodes.Conflict)
+            case _: SuccessfulRequest => HttpResponse(StatusCodes.OK)
+            case _: FailureRequest => HttpResponse(StatusCodes.Conflict)
           }
           complete(res)
         }
@@ -70,8 +70,8 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
       pathEndOrSingleSlash {
         post {
           val res = (supervisor ? InitStartState(flowId)).map {
-            case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
-            case _: FailureNotice => HttpResponse(StatusCodes.NotFound)
+            case _: SuccessfulRequest => HttpResponse(StatusCodes.OK)
+            case _: FailureRequest => HttpResponse(StatusCodes.NotFound)
           }
           complete(res)
         }
@@ -92,8 +92,8 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
       pathEndOrSingleSlash {
         post {
           val res = (supervisor ? InitRetrievalState(flowId)).map {
-            case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
-            case _: FailureNotice => HttpResponse(StatusCodes.NotFound)
+            case _: SuccessfulRequest => HttpResponse(StatusCodes.OK)
+            case _: FailureRequest => HttpResponse(StatusCodes.NotFound)
           }
           complete(res)
         }
@@ -114,8 +114,8 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
       pathEndOrSingleSlash {
         post {
           val res = (supervisor ? InitTransformationState(flowId)).map {
-            case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
-            case _: FailureNotice => HttpResponse(StatusCodes.NotFound)
+            case _: SuccessfulRequest => HttpResponse(StatusCodes.OK)
+            case _: FailureRequest => HttpResponse(StatusCodes.NotFound)
           }
           complete(res)
         }
@@ -136,8 +136,8 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
       pathEndOrSingleSlash {
         post {
           val res = (supervisor ? InitNormalizationState(flowId)).map {
-            case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
-            case _: FailureNotice => HttpResponse(StatusCodes.NotFound)
+            case _: SuccessfulRequest => HttpResponse(StatusCodes.OK)
+            case _: FailureRequest => HttpResponse(StatusCodes.NotFound)
           }
           complete(res)
         }
@@ -158,8 +158,8 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
       pathEndOrSingleSlash {
         post {
           val res = (supervisor ? InitValidationState(flowId)).map {
-            case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
-            case _: FailureNotice => HttpResponse(StatusCodes.NotFound)
+            case _: SuccessfulRequest => HttpResponse(StatusCodes.OK)
+            case _: FailureRequest => HttpResponse(StatusCodes.NotFound)
           }
           complete(res)
         }
@@ -180,8 +180,8 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
       pathEndOrSingleSlash {
         post {
           val res = (supervisor ? InitLoadState(flowId)).map {
-            case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
-            case _: FailureNotice => HttpResponse(StatusCodes.NotFound)
+            case _: SuccessfulRequest => HttpResponse(StatusCodes.OK)
+            case _: FailureRequest => HttpResponse(StatusCodes.NotFound)
           }
           complete(res)
         }
@@ -202,8 +202,8 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
       pathEndOrSingleSlash {
         post {
           val res = (supervisor ? InitFinishState(flowId)).map {
-            case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
-            case _: FailureNotice => HttpResponse(StatusCodes.NotFound)
+            case _: SuccessfulRequest => HttpResponse(StatusCodes.OK)
+            case _: FailureRequest => HttpResponse(StatusCodes.NotFound)
           }
           complete(res)
         }

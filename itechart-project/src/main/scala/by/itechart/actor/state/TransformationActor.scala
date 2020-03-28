@@ -20,17 +20,17 @@ class TransformationActor(
   def receive = {
     case message: RunTransformationState =>
       ds.getFlowById(message.flowId, StateId.transformationId.id).flatMap {
-        case res: SuccessfulNotice =>
+        case res: SuccessfulRequest =>
           message.statesToActor(StateId.normalizationId.id) ?
             PassToNormalizationState(res.flow.copy(statusId = StateId.normalizationId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor)
-        case res: FailureNotice => Future.successful(res)
+        case res: FailureRequest => Future.successful(res)
       }.mapTo[Notice].pipeTo(sender())
     case message: PassToTransformationState =>
       ds.insertFlow(message.flow).flatMap {
-        case res: SuccessfulNotice =>
+        case res: SuccessfulRequest =>
           message.statesToActor(StateId.normalizationId.id) ?
             PassToNormalizationState(res.flow.copy(statusId = StateId.normalizationId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor)
-        case res: FailureNotice => Future.successful(res)
+        case res: FailureRequest => Future.successful(res)
       }.mapTo[Notice].pipeTo(sender())
   }
 }

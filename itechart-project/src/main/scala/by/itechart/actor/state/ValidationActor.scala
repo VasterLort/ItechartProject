@@ -20,17 +20,17 @@ class ValidationActor(
   def receive = {
     case message: RunValidationState =>
       ds.getFlowById(message.flowId, StateId.validationId.id).flatMap {
-        case res: SuccessfulNotice =>
+        case res: SuccessfulRequest =>
           message.statesToActor(StateId.loadId.id) ?
             PassToLoadState(res.flow.copy(statusId = StateId.loadId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor)
-        case res: FailureNotice => Future.successful(res)
+        case res: FailureRequest => Future.successful(res)
       }.mapTo[Notice].pipeTo(sender())
     case message: PassToValidationState =>
       ds.insertFlow(message.flow).flatMap {
-        case res: SuccessfulNotice =>
+        case res: SuccessfulRequest =>
           message.statesToActor(StateId.loadId.id) ?
             PassToLoadState(res.flow.copy(statusId = StateId.loadId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor)
-        case res: FailureNotice => Future.successful(res)
+        case res: FailureRequest => Future.successful(res)
       }.mapTo[Notice].pipeTo(sender())
   }
 }
