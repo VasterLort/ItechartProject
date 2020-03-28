@@ -22,11 +22,21 @@ class SupervisorActor extends Actor with ActorLogging {
     StateId.finishId.id -> context.actorOf(Props(new FinishActor()), name = "state-finish"))
 
   def receive = {
-    case message: InitStartState => (statesToActor(StateId.startId.id) ? RunStartState(message.flowId, statesToActor)).mapTo[Notice].pipeTo(sender())
-    case message: InitRetrievalState => (statesToActor(StateId.retrievalId.id) ? RunRetrievalState(message.flowId, statesToActor)).mapTo[Notice].pipeTo(sender())
-    case message: InitTransformationState => (statesToActor(StateId.transformationId.id) ? RunTransformationState(message.flowId, statesToActor)).mapTo[Notice].pipeTo(sender())
-    case message: InitNormalizationState => (statesToActor(StateId.normalizationId.id) ? RunNormalizationState(message.flowId, statesToActor)).mapTo[Notice].pipeTo(sender())
-    case message: InitValidationState => (statesToActor(StateId.validationId.id) ? RunValidationState(message.flowId, statesToActor)).mapTo[Notice].pipeTo(sender())
-    case message: InitLoadState => (statesToActor(StateId.loadId.id) ? RunLoadState(message.flowId, statesToActor)).mapTo[Notice].pipeTo(sender())
+    case _: CreateNewFlow =>
+      (statesToActor(StateId.startId.id) ? PassToStartState(statesToActor)).mapTo[Notice].pipeTo(sender())
+    case message: InitStartState =>
+      (statesToActor(StateId.startId.id) ? RunStartState(message.flowId, statesToActor)).mapTo[Notice].pipeTo(sender())
+    case message: InitRetrievalState =>
+      (statesToActor(StateId.retrievalId.id) ? RunRetrievalState(message.flowId, statesToActor)).mapTo[Notice].pipeTo(sender())
+    case message: InitTransformationState =>
+      (statesToActor(StateId.transformationId.id) ? RunTransformationState(message.flowId, statesToActor)).mapTo[Notice].pipeTo(sender())
+    case message: InitNormalizationState =>
+      (statesToActor(StateId.normalizationId.id) ? RunNormalizationState(message.flowId, statesToActor)).mapTo[Notice].pipeTo(sender())
+    case message: InitValidationState =>
+      (statesToActor(StateId.validationId.id) ? RunValidationState(message.flowId, statesToActor)).mapTo[Notice].pipeTo(sender())
+    case message: InitLoadState =>
+      (statesToActor(StateId.loadId.id) ? RunLoadState(message.flowId, statesToActor)).mapTo[Notice].pipeTo(sender())
+    case message: InitFinishState =>
+      (statesToActor(StateId.finishId.id) ? RunFinishState(message.flowId, statesToActor)).mapTo[Notice].pipeTo(sender())
   }
 }

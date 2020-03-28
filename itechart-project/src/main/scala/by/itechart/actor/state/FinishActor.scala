@@ -3,10 +3,12 @@ package by.itechart.actor.state
 import akka.actor.{Actor, ActorLogging}
 import akka.pattern.pipe
 import akka.util.Timeout
-import by.itechart.action.{Notice, PassToFinishState}
+import by.itechart.action._
+import by.itechart.enums.StateId
 import by.itechart.service.DatabaseService
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class FinishActor(
@@ -15,6 +17,12 @@ class FinishActor(
   implicit val timeout = Timeout(10.seconds)
 
   def receive = {
+    case message: RunFinishState =>
+      ds.getFlowById(message.flowId, StateId.finishId.id).flatMap {
+        case res: SuccessfulNotice =>
+          ds.insertFlow(res.flow).mapTo[Notice].pipeTo(sender())
+        case res: FailureNotice => Future.successful(res)
+      }.mapTo[Notice].pipeTo(sender())
     case message: PassToFinishState =>
       ds.insertFlow(message.flow).mapTo[Notice].pipeTo(sender())
   }

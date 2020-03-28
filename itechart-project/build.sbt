@@ -40,3 +40,4 @@ libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
 
 libraryDependencies += "org.flywaydb" % "flyway-core" % "6.3.1"
 
+libraryDependencies += "io.jvm.uuid" %% "scala-uuid" % "0.3.1"
