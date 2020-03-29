@@ -15,7 +15,7 @@ object SftpConnection {
     session.setPassword(AppConfig.configValues.sftpPassword)
     session.connect()
 
-    val result = getPaymentFile(session.openChannel("sftp").asInstanceOf[ChannelSftp])
+    val result = getPaymentFile(session.openChannel(AppConfig.configValues.sftpType).asInstanceOf[ChannelSftp])
 
     session.disconnect()
 
@@ -46,7 +46,7 @@ object SftpConnection {
   }
 
   private def checkPaymentFileName(paymentFileName: String): Notice = {
-    paymentFileName.substring(paymentFileName.lastIndexOf(' ') + 1) match {
+    paymentFileName.substring(paymentFileName.lastIndexOf(' ') + AppConfig.configValues.fileNameIndex) match {
       case fileName if fileName.matches("\\w+_\\w+_\\d{8}\\.csv") => CsvPaymentFileName(fileName)
       case fileName if fileName.matches("\\w+_\\w+_\\d{8}\\.xlsx") => XlsxPaymentFileName(fileName)
       case _ => InvalidFileName()

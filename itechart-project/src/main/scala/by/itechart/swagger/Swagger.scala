@@ -1,19 +1,20 @@
 package by.itechart.swagger
 
 import akka.http.scaladsl.server.Route
+import by.itechart.config.AppConfig
 import by.itechart.service.SupervisorService
 import com.github.swagger.akka.SwaggerHttpService
 
 object Swagger extends SwaggerHttpService {
   override val apiClasses = Set(classOf[SupervisorService])
-  override val host = "localhost:8080"
+  override val host = AppConfig.configValues.swaggerHost
 
   override def routes: Route = super.routes ~ get {
-    pathPrefix("") {
+    pathPrefix(AppConfig.configValues.swaggerPathPrefix) {
       pathEndOrSingleSlash {
-        getFromResource("swagger-ui/index.html")
+        getFromResource(AppConfig.configValues.swaggerResource)
       }
     } ~
-      getFromResourceDirectory("swagger-ui")
+      getFromResourceDirectory(AppConfig.configValues.swaggerResourceDirectory)
   }
 }

@@ -1,6 +1,7 @@
 package by.itechart.service
 
 import by.itechart.action._
+import by.itechart.config.AppConfig
 import by.itechart.conversion.Converter
 import by.itechart.sftp.SftpConnection
 

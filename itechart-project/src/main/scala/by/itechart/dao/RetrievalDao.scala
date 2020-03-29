@@ -10,6 +10,7 @@ case class Retrieval(
                       flowId: String,
                       fileName: String,
                       content: String,
+                      creationDate: String,
                       recordId: Long = 0L
                     )
 
@@ -21,6 +22,10 @@ class RetrievalDao(val dbProvider: DatabaseConfig.type = DatabaseConfig) {
     db.run((scheme returning scheme.map(_.recordId) into ((instance, recordId) => instance.copy(recordId = recordId))) += flow)
   }
 
+  def getById(flowId: String): Future[Option[Retrieval]] = {
+    db.run(scheme.filter(flow => flow.flowId === flowId).result.headOption)
+  }
+
   private class RetrievalTable(tag: Tag) extends Table[Retrieval](tag, "retrieval") {
     def recordId = column[Long]("record_id", O.PrimaryKey, O.AutoInc)
 
@@ -30,7 +35,9 @@ class RetrievalDao(val dbProvider: DatabaseConfig.type = DatabaseConfig) {
 
     def content = column[String]("content")
 
-    def * = (flowId, fileName, content, recordId) <> (Retrieval.tupled, Retrieval.unapply)
+    def creationDate = column[String]("creation_date")
+
+    def * = (flowId, fileName, content, creationDate, recordId) <> (Retrieval.tupled, Retrieval.unapply)
   }
 
 }

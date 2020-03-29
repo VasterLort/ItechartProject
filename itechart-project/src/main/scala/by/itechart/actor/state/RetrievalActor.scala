@@ -4,6 +4,7 @@ import akka.actor.{Actor, ActorLogging}
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import by.itechart.action._
+import by.itechart.dao.Flow
 import by.itechart.date.MyDate
 import by.itechart.enums.StateId
 import by.itechart.service.DatabaseService
@@ -19,18 +20,18 @@ class RetrievalActor(
 
   def receive = {
     case message: RunRetrievalState =>
-      ds.getFlowById(message.flowId, StateId.retrievalId.id).flatMap {
-        case res: SuccessfulRequest =>
+      ds.getRetrievalFlowById(message.flowId).flatMap {
+        case res: SuccessfulRequestForRetrieval =>
           message.statesToActor(StateId.transformationId.id) ?
-            PassToTransformationState(res.flow.copy(statusId = StateId.transformationId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor)
-        case res: FailureRequest => Future.successful(res)
+            PassToTransformationState(Flow(res.flow.flowId, StateId.transformationId.id, MyDate.getCurrentDate()), message.statesToActor)
+        case _ => Future.successful(FailureRequest())
       }.mapTo[Notice].pipeTo(sender())
     case message: PassToRetrievalState =>
       ds.insertRetrievalFlow(message.flow).flatMap {
-        case res: SuccessfulRequest =>
+        case res: SuccessfulRequestForRetrieval =>
           message.statesToActor(StateId.transformationId.id) ?
-            PassToTransformationState(res.flow.copy(statusId = StateId.transformationId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor)
-        case res: FailureRequest => Future.successful(res)
+            PassToTransformationState(Flow(res.flow.flowId, StateId.transformationId.id, MyDate.getCurrentDate()), message.statesToActor)
+        case _ => Future.successful(FailureRequest())
       }.mapTo[Notice].pipeTo(sender())
   }
 }

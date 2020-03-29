@@ -8,7 +8,7 @@ case class SuccessfulRequest(flow: Flow, message: String = "Request was complete
 
 case class FailureRequest(message: String = "Error!!!") extends Notice
 
-case class SuccessfulRetrieval(flow: Retrieval, message: String = "Request was completed!!!") extends Notice
+case class SuccessfulRequestForRetrieval(flow: Retrieval, message: String = "Request was completed!!!") extends Notice
 
 case class FailureRetrieval(message: String = "Request was completed!!!") extends Notice
 
