@@ -23,14 +23,14 @@ class RetrievalActor(
       ds.getRetrievalFlowById(message.flowId).flatMap {
         case res: SuccessfulRequestForRetrieval =>
           message.statesToActor(StateId.transformationId.id) ?
-            PassToTransformationState(Flow(res.flow.flowId, StateId.transformationId.id, MyDate.getCurrentDate()), message.statesToActor)
+            PassToTransformationState(Flow(res.flow.flowId, res.flow.fileName, StateId.transformationId.id, MyDate.getCurrentDate()), message.statesToActor)
         case _ => Future.successful(FailureRequest())
       }.mapTo[Notice].pipeTo(sender())
     case message: PassToRetrievalState =>
       ds.insertRetrievalFlow(message.flow).flatMap {
         case res: SuccessfulRequestForRetrieval =>
           message.statesToActor(StateId.transformationId.id) ?
-            PassToTransformationState(Flow(res.flow.flowId, StateId.transformationId.id, MyDate.getCurrentDate()), message.statesToActor)
+            PassToTransformationState(Flow(res.flow.flowId, res.flow.fileName, StateId.transformationId.id, MyDate.getCurrentDate()), message.statesToActor)
         case _ => Future.successful(FailureRequest())
       }.mapTo[Notice].pipeTo(sender())
   }

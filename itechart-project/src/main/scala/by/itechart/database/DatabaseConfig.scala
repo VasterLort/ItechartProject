@@ -1,4 +1,4 @@
-package by.itechart.config
+package by.itechart.database
 
 import slick.jdbc.PostgresProfile
 

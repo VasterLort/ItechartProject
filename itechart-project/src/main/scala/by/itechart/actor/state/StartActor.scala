@@ -21,7 +21,7 @@ class StartActor(
 
   def receive = {
     case message: PassToStartState =>
-      ds.insertFlow(Flow(UUID.random.toString, StateId.startId.id, MyDate.getCurrentDate())).flatMap {
+      ds.insertFlow(Flow(UUID.random.toString, message.fileName, StateId.startId.id, MyDate.getCurrentDate())).flatMap {
         case res: SuccessfulRequest =>
           message.statesToActor(StateId.retrievalId.id) ?
             PassToRetrievalState(res.flow.copy(statusId = StateId.retrievalId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor)

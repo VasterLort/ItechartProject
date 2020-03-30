@@ -1,21 +1,19 @@
 package by.itechart.service
 
 import by.itechart.action._
-import by.itechart.config.AppConfig
-import by.itechart.conversion.Converter
+import by.itechart.conversion.XlsxToCsvConverter
 import by.itechart.sftp.SftpConnection
 
-class RetrievalService {
-  def getPaymentFile(): Notice = {
-    checkFormatPaymentFile(SftpConnection.connectSftpServer())
+class RetrievalService(val sftpConnection: SftpConnection.type = SftpConnection) {
+  def getPaymentFile(fileName: String): Notice = {
+    checkFormatPaymentFile(sftpConnection.getPaymentFile(fileName))
   }
 
   private def checkFormatPaymentFile(paymentFile: Notice): Notice = {
     paymentFile match {
       case fileName: CsvPaymentFile => fileName
-      case fileName: XlsxPaymentFileName => Converter.convertXlsxToCsv(fileName.name)
+      case fileName: XlsxPaymentFileName => XlsxToCsvConverter.convert(fileName.name)
       case _: InvalidFileName => InvalidFileName()
-      case _: EmptyFolder => EmptyFolder()
     }
   }
 }

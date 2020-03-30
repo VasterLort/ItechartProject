@@ -4,6 +4,7 @@ import by.itechart.action._
 import by.itechart.dao.initialization.Daos
 import by.itechart.dao.{Flow, FlowDao, Retrieval, RetrievalDao}
 import by.itechart.date.MyDate
+import by.itechart.enums.StateId
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -15,14 +16,17 @@ class DatabaseService(
                      ) {
 
   def insertRetrievalFlow(flow: Flow): Future[Notice] = {
-    retrievalService.getPaymentFile() match {
-      case _: InvalidFileName => Future.successful(InvalidFileName())
-      case _: EmptyFolder => Future.successful(EmptyFolder())
+    retrievalService.getPaymentFile(flow.fileName) match {
       case paymentFile: CsvPaymentFile =>
-        retrievalDao.insert(Retrieval(flow.flowId, paymentFile.fileName, paymentFile.content, MyDate.getCurrentDate())).map {
-          case res: Retrieval => SuccessfulRequestForRetrieval(res)
-          case _ => FailureRetrieval()
+        retrievalDao.insert(Retrieval(flow.flowId, paymentFile.fileName, paymentFile.content, MyDate.getCurrentDate())).flatMap {
+          case res: Retrieval =>
+            insertFlow(Flow(res.flowId, res.fileName, StateId.retrievalId.id, MyDate.getCurrentDate())).flatMap {
+              case _: SuccessfulRequest => Future.successful(SuccessfulRequestForRetrieval(res))
+              case _ => Future.successful(FailureRetrieval())
+            }
+          case _ => Future(FailureRetrieval())
         }
+      case _ => Future.successful(FailureRetrieval())
     }
   }
 

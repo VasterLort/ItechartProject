@@ -21,6 +21,8 @@ case class InitLoadState(flowId: String) extends Message
 
 case class InitFinishState(flowId: String) extends Message
 
+case class RunInitializationState(statesToActor: Map[Int, ActorRef]) extends Message
+
 case class RunStartState(flowId: String, statesToActor: Map[Int, ActorRef]) extends Message
 
 case class RunRetrievalState(flowId: String, statesToActor: Map[Int, ActorRef]) extends Message
@@ -35,7 +37,7 @@ case class RunLoadState(flowId: String, statesToActor: Map[Int, ActorRef]) exten
 
 case class RunFinishState(flowId: String, statesToActor: Map[Int, ActorRef]) extends Message
 
-case class PassToStartState(statesToActor: Map[Int, ActorRef]) extends Message
+case class PassToStartState(fileName: String, statesToActor: Map[Int, ActorRef]) extends Message
 
 case class PassToRetrievalState(flow: Flow, statesToActor: Map[Int, ActorRef]) extends Message
 

@@ -1,6 +1,6 @@
 package by.itechart.dao
 
-import by.itechart.config.DatabaseConfig
+import by.itechart.database.DatabaseConfig
 import slick.jdbc.PostgresProfile.api._
 import slick.lifted.TableQuery
 
@@ -26,7 +26,7 @@ class RetrievalDao(val dbProvider: DatabaseConfig.type = DatabaseConfig) {
     db.run(scheme.filter(flow => flow.flowId === flowId).result.headOption)
   }
 
-  private class RetrievalTable(tag: Tag) extends Table[Retrieval](tag, "retrieval") {
+  private class RetrievalTable(tag: Tag) extends Table[Retrieval](tag, "flow_retrieval") {
     def recordId = column[Long]("record_id", O.PrimaryKey, O.AutoInc)
 
     def flowId = column[String]("flow_id")

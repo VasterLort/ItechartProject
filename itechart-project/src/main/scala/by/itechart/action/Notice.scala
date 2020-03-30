@@ -12,6 +12,8 @@ case class SuccessfulRequestForRetrieval(flow: Retrieval, message: String = "Req
 
 case class FailureRetrieval(message: String = "Request was completed!!!") extends Notice
 
+case class EmptyFile(message: String = "File is empty") extends Notice
+
 case class EmptyFolder(message: String = "Folder is empty") extends Notice
 
 case class InvalidFileName(message: String = "File name is invalid") extends Notice
@@ -23,3 +25,9 @@ case class XlsxPaymentFileName(name: String) extends Notice
 case class CsvPaymentFile(content: String, fileName: String) extends Notice
 
 case class XlsxPaymentFile(content: String, fileName: String) extends Notice
+
+case class PaymentFileAction(name: String) extends Notice
+
+case class PaymentFileNameAction() extends Notice
+
+case class PaymentFileName(name: java.util.Vector[_]) extends Notice
