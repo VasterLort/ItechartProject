@@ -16,7 +16,7 @@ import scala.concurrent.duration._
 class RetrievalActor(
                       private val ds: DatabaseService = new DatabaseService
                     ) extends Actor with ActorLogging {
-  implicit val timeout = Timeout(10.seconds)
+  implicit val timeout = Timeout(30.seconds)
 
   def receive = {
     case message: RunRetrievalState =>
