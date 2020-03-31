@@ -19,9 +19,9 @@ class FinishActor(
   def receive = {
     case message: RunFinishState =>
       ds.getFlowById(message.flowId, StateId.finishId.id).flatMap {
-        case res: SuccessfulNotice =>
+        case res: SuccessfulRequest =>
           ds.insertFlow(res.flow).mapTo[Notice].pipeTo(sender())
-        case res: FailureNotice => Future.successful(res)
+        case res: FailureRequest => Future.successful(res)
       }.mapTo[Notice].pipeTo(sender())
     case message: PassToFinishState =>
       ds.insertFlow(message.flow).mapTo[Notice].pipeTo(sender())

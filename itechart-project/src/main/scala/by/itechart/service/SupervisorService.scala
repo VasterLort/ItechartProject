@@ -28,7 +28,7 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 }
 
 class SupervisorService(supervisor: ActorRef)(implicit executionContext: ExecutionContext) extends Directives with JsonSupport {
-  implicit val timeout = Timeout(10.seconds)
+  implicit val timeout = Timeout(30.seconds)
 
   val route =
     createFlow ~
@@ -47,9 +47,11 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
     pathPrefix("flows") {
       pathEndOrSingleSlash {
         post {
-          val res = (supervisor ? CreateNewFlow()).map {
-            case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
-            case _: FailureNotice => HttpResponse(StatusCodes.Conflict)
+          val res = (supervisor ? CreateNewFlow()).mapTo[Seq[Notice]].map { seq =>
+            seq.collect { case value: FailureRequest => value }.isEmpty match {
+              case true => HttpResponse(StatusCodes.OK)
+              case false => HttpResponse(StatusCodes.Conflict)
+            }
           }
           complete(res)
         }
@@ -70,8 +72,8 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
       pathEndOrSingleSlash {
         post {
           val res = (supervisor ? InitStartState(flowId)).map {
-            case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
-            case _: FailureNotice => HttpResponse(StatusCodes.NotFound)
+            case _: SuccessfulRequest => HttpResponse(StatusCodes.OK)
+            case _: FailureRequest => HttpResponse(StatusCodes.NotFound)
           }
           complete(res)
         }
@@ -92,8 +94,8 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
       pathEndOrSingleSlash {
         post {
           val res = (supervisor ? InitRetrievalState(flowId)).map {
-            case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
-            case _: FailureNotice => HttpResponse(StatusCodes.NotFound)
+            case _: SuccessfulRequest => HttpResponse(StatusCodes.OK)
+            case _: FailureRequest => HttpResponse(StatusCodes.NotFound)
           }
           complete(res)
         }
@@ -114,8 +116,8 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
       pathEndOrSingleSlash {
         post {
           val res = (supervisor ? InitTransformationState(flowId)).map {
-            case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
-            case _: FailureNotice => HttpResponse(StatusCodes.NotFound)
+            case _: SuccessfulRequest => HttpResponse(StatusCodes.OK)
+            case _: FailureRequest => HttpResponse(StatusCodes.NotFound)
           }
           complete(res)
         }
@@ -136,8 +138,8 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
       pathEndOrSingleSlash {
         post {
           val res = (supervisor ? InitNormalizationState(flowId)).map {
-            case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
-            case _: FailureNotice => HttpResponse(StatusCodes.NotFound)
+            case _: SuccessfulRequest => HttpResponse(StatusCodes.OK)
+            case _: FailureRequest => HttpResponse(StatusCodes.NotFound)
           }
           complete(res)
         }
@@ -158,8 +160,8 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
       pathEndOrSingleSlash {
         post {
           val res = (supervisor ? InitValidationState(flowId)).map {
-            case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
-            case _: FailureNotice => HttpResponse(StatusCodes.NotFound)
+            case _: SuccessfulRequest => HttpResponse(StatusCodes.OK)
+            case _: FailureRequest => HttpResponse(StatusCodes.NotFound)
           }
           complete(res)
         }
@@ -180,8 +182,8 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
       pathEndOrSingleSlash {
         post {
           val res = (supervisor ? InitLoadState(flowId)).map {
-            case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
-            case _: FailureNotice => HttpResponse(StatusCodes.NotFound)
+            case _: SuccessfulRequest => HttpResponse(StatusCodes.OK)
+            case _: FailureRequest => HttpResponse(StatusCodes.NotFound)
           }
           complete(res)
         }
@@ -202,8 +204,8 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
       pathEndOrSingleSlash {
         post {
           val res = (supervisor ? InitFinishState(flowId)).map {
-            case _: SuccessfulNotice => HttpResponse(StatusCodes.OK)
-            case _: FailureNotice => HttpResponse(StatusCodes.NotFound)
+            case _: SuccessfulRequest => HttpResponse(StatusCodes.OK)
+            case _: FailureRequest => HttpResponse(StatusCodes.NotFound)
           }
           complete(res)
         }

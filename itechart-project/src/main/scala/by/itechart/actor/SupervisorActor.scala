@@ -11,8 +11,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
 class SupervisorActor extends Actor with ActorLogging {
-  implicit val timeout = Timeout(10.seconds)
+  implicit val timeout = Timeout(30.seconds)
   private val statesToActor: Map[Int, ActorRef] = Map(
+    StateId.initializationId.id -> context.actorOf(Props(new InitializationActor()), name = "state-init"),
     StateId.startId.id -> context.actorOf(Props(new StartActor()), name = "state-start"),
     StateId.retrievalId.id -> context.actorOf(Props(new RetrievalActor()), name = "state-retrieve"),
     StateId.transformationId.id -> context.actorOf(Props(new TransformationActor()), name = "state-transform"),
@@ -23,7 +24,7 @@ class SupervisorActor extends Actor with ActorLogging {
 
   def receive = {
     case _: CreateNewFlow =>
-      (statesToActor(StateId.startId.id) ? PassToStartState(statesToActor)).mapTo[Notice].pipeTo(sender())
+      (statesToActor(StateId.initializationId.id) ? RunInitializationState(statesToActor)).mapTo[Seq[Notice]].pipeTo(sender())
     case message: InitStartState =>
       (statesToActor(StateId.startId.id) ? RunStartState(message.flowId, statesToActor)).mapTo[Notice].pipeTo(sender())
     case message: InitRetrievalState =>

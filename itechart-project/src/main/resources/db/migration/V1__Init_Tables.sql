@@ -7,6 +7,7 @@ CREATE TABLE status(
 CREATE TABLE flow(
     record_id BIGSERIAL,
 	flow_id VARCHAR(50),
+	file_name VARCHAR(50),
 	status_id BIGINT NOT NULL,
 	status_date VARCHAR(100) NOT NULL,
 	PRIMARY KEY (record_id),

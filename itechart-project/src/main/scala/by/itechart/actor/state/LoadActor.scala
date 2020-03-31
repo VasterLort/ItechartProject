@@ -20,17 +20,17 @@ class LoadActor(
   def receive = {
     case message: RunLoadState =>
       ds.getFlowById(message.flowId, StateId.loadId.id).flatMap {
-        case res: SuccessfulNotice =>
+        case res: SuccessfulRequest =>
           message.statesToActor(StateId.finishId.id) ?
             PassToFinishState(res.flow.copy(statusId = StateId.finishId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor)
-        case res: FailureNotice => Future.successful(res)
+        case res: FailureRequest => Future.successful(res)
       }.mapTo[Notice].pipeTo(sender())
     case message: PassToLoadState =>
       ds.insertFlow(message.flow).flatMap {
-        case res: SuccessfulNotice =>
+        case res: SuccessfulRequest =>
           message.statesToActor(StateId.finishId.id) ?
             PassToFinishState(res.flow.copy(statusId = StateId.finishId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor)
-        case res: FailureNotice => Future.successful(res)
+        case res: FailureRequest => Future.successful(res)
       }.mapTo[Notice].pipeTo(sender())
   }
 }
