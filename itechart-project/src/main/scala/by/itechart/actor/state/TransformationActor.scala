@@ -26,7 +26,7 @@ class TransformationActor(
         case res: FailureRequest => Future.successful(res)
       }.mapTo[Notice].pipeTo(sender())
     case message: PassToTransformationState =>
-      ds.insertFlow(message.flow).flatMap {
+      ds.insertTransformationFlow(message.flow).flatMap {
         case res: SuccessfulRequest =>
           message.statesToActor(StateId.normalizationId.id) ?
             PassToNormalizationState(res.flow.copy(statusId = StateId.normalizationId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor)
