@@ -1,6 +1,7 @@
 package by.itechart.action
 
-import by.itechart.dao.{Flow, Retrieval}
+import by.itechart.dao.{Flow, Retrieval, Transformation}
+import org.json4s.JValue
 
 sealed trait Notice
 
@@ -10,7 +11,11 @@ case class FailureRequest(message: String = "Error!!!") extends Notice
 
 case class SuccessfulRequestForRetrieval(flow: Retrieval, message: String = "Request was completed!!!") extends Notice
 
-case class FailureRetrieval(message: String = "Request was completed!!!") extends Notice
+case class FailureRetrieval(message: String = "Request was failed!!!") extends Notice
+
+case class SuccessfulRequestForTransformation(flow: Transformation, message: String = "Request was completed!!!") extends Notice
+
+case class FailureTransformation(message: String = "Request was failed!!!") extends Notice
 
 case class EmptyFile(message: String = "File is empty") extends Notice
 
@@ -32,6 +37,10 @@ case class PaymentFileNameAction() extends Notice
 
 case class PaymentFileName(name: java.util.Vector[_]) extends Notice
 
-case class SinglePayment() extends Notice
+case class ConversionSucceed(json: JValue) extends Notice
 
-case class MultiplePayments() extends Notice
+case class ConversionError(message: String = "Conversion error Csv to Json!!!") extends Notice
+
+case class CorrectKeys(value: Map[String, String]) extends Notice
+
+case class IncorrectKeys(message: String = "Incorrect Keys!!!") extends Notice

@@ -1,8 +1,8 @@
 package by.itechart.service
 
 import by.itechart.action._
+import by.itechart.dao._
 import by.itechart.dao.initialization.Daos
-import by.itechart.dao.{Flow, FlowDao, Retrieval, RetrievalDao}
 import by.itechart.date.MyDate
 import by.itechart.enums.StateId
 
@@ -12,6 +12,7 @@ import scala.concurrent.Future
 class DatabaseService(
                        private val flowDao: FlowDao = Daos.flowDao,
                        private val retrievalDao: RetrievalDao = Daos.retrievalDao,
+                       private val transformationDao: TransformationDao = Daos.transformationDao,
                        private val retrievalService: RetrievalService = new RetrievalService(),
                        private val transformationService: TransformationService = new TransformationService()
                      ) {
@@ -31,13 +32,31 @@ class DatabaseService(
     }
   }
 
-  def insertTransformationFlow(flow: Retrieval): Notice = {
-    transformationService.getTransformedData(flow)
-  }
-
   def getRetrievalFlowById(flowId: String): Future[Notice] = {
     retrievalDao.getById(flowId).map {
       case Some(res) if res.flowId == flowId => SuccessfulRequestForRetrieval(res)
+      case _ => FailureRequest()
+    }
+  }
+
+  def insertTransformationFlow(flow: Retrieval): Future[Notice] = {
+    transformationService.getTransformedData(flow) match {
+      case notice: ConversionSucceed =>
+        transformationDao.insert(Transformation(flow.flowId, flow.fileName, notice.json, MyDate.getCurrentDate())).flatMap {
+          case res: Transformation =>
+            insertFlow(Flow(res.flowId, res.fileName, StateId.transformationId.id, MyDate.getCurrentDate())).flatMap {
+              case _: SuccessfulRequest => Future.successful(SuccessfulRequestForTransformation(res))
+              case _ => Future.successful(FailureTransformation())
+            }
+          case _ => Future(FailureTransformation())
+        }
+      case _ => Future.successful(FailureTransformation())
+    }
+  }
+
+  def getTransformationFlowById(flowId: String): Future[Notice] = {
+    transformationDao.getById(flowId).map {
+      case Some(res) if res.flowId == flowId => SuccessfulRequestForTransformation(res)
       case _ => FailureRequest()
     }
   }

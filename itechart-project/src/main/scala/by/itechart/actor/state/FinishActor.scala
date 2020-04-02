@@ -14,7 +14,7 @@ import scala.concurrent.duration._
 class FinishActor(
                    private val ds: DatabaseService = new DatabaseService
                  ) extends Actor with ActorLogging {
-  implicit val timeout = Timeout(10.seconds)
+  implicit val timeout = Timeout(120.seconds)
 
   def receive = {
     case message: RunFinishState =>

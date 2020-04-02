@@ -28,7 +28,7 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 }
 
 class SupervisorService(supervisor: ActorRef)(implicit executionContext: ExecutionContext) extends Directives with JsonSupport {
-  implicit val timeout = Timeout(30.seconds)
+  implicit val timeout = Timeout(120.seconds)
 
   val route =
     createFlow ~

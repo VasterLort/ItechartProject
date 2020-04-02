@@ -15,7 +15,7 @@ import scala.concurrent.duration._
 class InitializationActor(
                            private val service: InitializationService = new InitializationService()
                          ) extends Actor with ActorLogging {
-  implicit val timeout = Timeout(30.seconds)
+  implicit val timeout = Timeout(120.seconds)
 
   def receive = {
     case message: RunInitializationState =>

@@ -11,7 +11,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
 class SupervisorActor extends Actor with ActorLogging {
-  implicit val timeout = Timeout(30.seconds)
+  implicit val timeout = Timeout(120.seconds)
   private val statesToActor: Map[Int, ActorRef] = Map(
     StateId.initializationId.id -> context.actorOf(Props(new InitializationActor()), name = "state-init"),
     StateId.startId.id -> context.actorOf(Props(new StartActor()), name = "state-start"),
