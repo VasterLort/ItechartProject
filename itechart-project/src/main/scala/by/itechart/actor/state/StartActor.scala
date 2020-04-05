@@ -4,9 +4,9 @@ import akka.actor.{Actor, ActorLogging}
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import by.itechart.action._
+import by.itechart.constant.{Constant, StateId}
 import by.itechart.dao.Flow
 import by.itechart.date.MyDate
-import by.itechart.enums.StateId
 import by.itechart.service.DatabaseService
 import io.jvm.uuid._
 
@@ -17,7 +17,7 @@ import scala.concurrent.duration._
 class StartActor(
                   private val ds: DatabaseService = new DatabaseService,
                 ) extends Actor with ActorLogging {
-  implicit val timeout = Timeout(120.seconds)
+  implicit val timeout = Timeout(Constant.TimeoutSec.seconds)
 
   def receive = {
     case message: PassToStartState =>

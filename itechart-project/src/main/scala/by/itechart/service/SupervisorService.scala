@@ -47,12 +47,15 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
     pathPrefix("flows") {
       pathEndOrSingleSlash {
         post {
-          val res = (supervisor ? CreateNewFlow()).mapTo[Seq[Notice]].map { seq =>
-            seq.collect { case value: FailureRequest => value }.isEmpty match {
-              case true => HttpResponse(StatusCodes.OK)
-              case false => HttpResponse(StatusCodes.Conflict)
-            }
+          val res = (supervisor ? CreateNewFlow()).mapTo[Notice].map {
+            case _: EmptyFolder => HttpResponse(StatusCodes.NotFound)
+            case notice: NotEmptyFolder =>
+              notice.results.collect { case value: FailureRequest => value }.isEmpty match {
+                case true => HttpResponse(StatusCodes.OK)
+                case false => HttpResponse(StatusCodes.Conflict)
+              }
           }
+
           complete(res)
         }
       }

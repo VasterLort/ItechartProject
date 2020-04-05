@@ -5,13 +5,13 @@ import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import by.itechart.action._
 import by.itechart.actor.state._
-import by.itechart.enums.StateId
+import by.itechart.constant.{Constant, StateId}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
 class SupervisorActor extends Actor with ActorLogging {
-  implicit val timeout = Timeout(120.seconds)
+  implicit val timeout = Timeout(Constant.TimeoutSec.seconds)
   private val statesToActor: Map[Int, ActorRef] = Map(
     StateId.initializationId.id -> context.actorOf(Props(new InitializationActor()), name = "state-init"),
     StateId.startId.id -> context.actorOf(Props(new StartActor()), name = "state-start"),
@@ -24,7 +24,7 @@ class SupervisorActor extends Actor with ActorLogging {
 
   def receive = {
     case _: CreateNewFlow =>
-      (statesToActor(StateId.initializationId.id) ? RunInitializationState(statesToActor)).mapTo[Seq[Notice]].pipeTo(sender())
+      (statesToActor(StateId.initializationId.id) ? RunInitializationState(statesToActor)).mapTo[Notice].pipeTo(sender())
     case message: InitStartState =>
       (statesToActor(StateId.startId.id) ? RunStartState(message.flowId, statesToActor)).mapTo[Notice].pipeTo(sender())
     case message: InitRetrievalState =>

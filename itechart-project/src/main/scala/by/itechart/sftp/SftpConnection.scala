@@ -2,6 +2,7 @@ package by.itechart.sftp
 
 import by.itechart.action._
 import by.itechart.conf.{GeneralConf, SftpConf}
+import by.itechart.constant.Constant
 import com.jcraft.jsch.{ChannelSftp, JSch}
 
 import scala.io.Source
@@ -70,9 +71,9 @@ object SftpConnection {
   }
 
   private def checkPaymentFileName(paymentFileName: String): Notice = {
-    paymentFileName.substring(paymentFileName.lastIndexOf(' ') + GeneralConf.configValues.fileNameIndex) match {
-      case fileName if fileName.endsWith(".csv") => CsvPaymentFileName(fileName)
-      case fileName if fileName.endsWith(".xlsx") => XlsxPaymentFileName(fileName)
+    paymentFileName.substring(paymentFileName.lastIndexOf(Constant.UselessInfo) + Constant.FileNameIndex) match {
+      case fileName if fileName.endsWith(Constant.CsvFormat) => CsvPaymentFileName(fileName)
+      case fileName if fileName.endsWith(Constant.XlsxFormat) => XlsxPaymentFileName(fileName)
       case _ => InvalidFileName()
     }
   }

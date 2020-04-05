@@ -1,6 +1,6 @@
 package by.itechart.action
 
-import by.itechart.dao.{Flow, Retrieval, Transformation}
+import by.itechart.dao.{Dictionary, Flow, Retrieval, Transformation}
 import org.json4s.JValue
 
 sealed trait Notice
@@ -13,13 +13,15 @@ case class SuccessfulRequestForRetrieval(flow: Retrieval, message: String = "Req
 
 case class FailureRetrieval(message: String = "Request was failed!!!") extends Notice
 
-case class SuccessfulRequestForTransformation(flow: Transformation, message: String = "Request was completed!!!") extends Notice
+case class SuccessfulRequestForTransformation(flow: Seq[Transformation], message: String = "Request was completed!!!") extends Notice
 
 case class FailureTransformation(message: String = "Request was failed!!!") extends Notice
 
 case class EmptyFile(message: String = "File is empty") extends Notice
 
 case class EmptyFolder(message: String = "Folder is empty") extends Notice
+
+case class NotEmptyFolder(results: Seq[Notice]) extends Notice
 
 case class InvalidFileName(message: String = "File name is invalid") extends Notice
 
@@ -37,10 +39,24 @@ case class PaymentFileNameAction() extends Notice
 
 case class PaymentFileName(name: java.util.Vector[_]) extends Notice
 
-case class ConversionSucceed(json: JValue) extends Notice
+case class ConversionPaymentsSucceed(json: List[JValue], keys: Map[String, String]) extends Notice
+
+case class ConversionPaymentSucceed(json: JValue, keys: Array[String]) extends Notice
 
 case class ConversionError(message: String = "Conversion error Csv to Json!!!") extends Notice
 
 case class CorrectKeys(value: Map[String, String]) extends Notice
 
 case class IncorrectKeys(message: String = "Incorrect Keys!!!") extends Notice
+
+case class CorrectDictionary(dictionary: List[Dictionary]) extends Notice
+
+case class PreparedDictionary(dictionary: Map[String, String]) extends Notice
+
+case class IncorrectDictionary(message: String = "Dictionary is empty!!!") extends Notice
+
+case class SinglePayment() extends Notice
+
+case class SeveralPayments() extends Notice
+
+case class TransformedPayments(payments: List[Transformation]) extends Notice

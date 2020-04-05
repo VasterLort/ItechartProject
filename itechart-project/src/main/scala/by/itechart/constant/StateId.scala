@@ -1,4 +1,4 @@
-package by.itechart.enums
+package by.itechart.constant
 
 object StateId extends Enumeration {
   val initializationId = Value(0)
@@ -10,4 +10,3 @@ object StateId extends Enumeration {
   val loadId = Value(6)
   val finishId = Value(7)
 }
-

@@ -1,10 +1,10 @@
 package by.itechart.service
 
 import by.itechart.action._
+import by.itechart.constant.StateId
 import by.itechart.dao._
 import by.itechart.dao.initialization.Daos
 import by.itechart.date.MyDate
-import by.itechart.enums.StateId
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -14,7 +14,8 @@ class DatabaseService(
                        private val retrievalDao: RetrievalDao = Daos.retrievalDao,
                        private val transformationDao: TransformationDao = Daos.transformationDao,
                        private val retrievalService: RetrievalService = new RetrievalService(),
-                       private val transformationService: TransformationService = new TransformationService()
+                       private val transformationService: TransformationService = new TransformationService(),
+                       private val normalizationService: NormalizationService = new NormalizationService(),
                      ) {
 
   def insertRetrievalFlow(flow: Flow): Future[Notice] = {
@@ -40,11 +41,11 @@ class DatabaseService(
   }
 
   def insertTransformationFlow(flow: Retrieval): Future[Notice] = {
-    transformationService.getTransformedData(flow) match {
-      case notice: ConversionSucceed =>
-        transformationDao.insert(Transformation(flow.flowId, flow.fileName, notice.json, MyDate.getCurrentDate())).flatMap {
-          case res: Transformation =>
-            insertFlow(Flow(res.flowId, res.fileName, StateId.transformationId.id, MyDate.getCurrentDate())).flatMap {
+    transformationService.getTransformedData(flow).flatMap {
+      case notice: TransformedPayments =>
+        transformationDao.insertAll(notice.payments).flatMap {
+          case res: Seq[Transformation] =>
+            insertFlow(Flow(flow.flowId, flow.fileName, StateId.transformationId.id, MyDate.getCurrentDate())).flatMap {
               case _: SuccessfulRequest => Future.successful(SuccessfulRequestForTransformation(res))
               case _ => Future.successful(FailureTransformation())
             }
@@ -56,9 +57,17 @@ class DatabaseService(
 
   def getTransformationFlowById(flowId: String): Future[Notice] = {
     transformationDao.getById(flowId).map {
-      case Some(res) if res.flowId == flowId => SuccessfulRequestForTransformation(res)
+      case res: Seq[Transformation] => SuccessfulRequestForTransformation(res)
       case _ => FailureRequest()
     }
+  }
+
+  def insertNormalizationFlow(flow: List[Transformation]): Future[Notice] = {
+    //normalizationService.getNormalizedPayment(flow)
+  }
+
+  def getNormalizationFlowById(flowId: String): Future[Notice] = {
+
   }
 
   def getFlowById(flowId: String, statusId: Long): Future[Notice] = {
