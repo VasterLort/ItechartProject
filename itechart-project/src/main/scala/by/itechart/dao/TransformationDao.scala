@@ -26,8 +26,8 @@ class TransformationDao(val dbProvider: DatabaseConfig.type = DatabaseConfig) {
     db.run((scheme returning scheme.map(_.recordId) into ((instance, recordId) => instance.copy(recordId = recordId))) ++= flow)
   }
 
-  def getById(flowId: String): Future[Option[Transformation]] = {
-    db.run(scheme.filter(flow => flow.flowId === flowId).result.headOption)
+  def getById(flowId: String): Future[Seq[Transformation]] = {
+    db.run(scheme.filter(flow => flow.flowId === flowId).result)
   }
 
   private class TransformationTable(tag: Tag) extends Table[Transformation](tag, "flow_transformation") {

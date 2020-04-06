@@ -33,7 +33,9 @@ class TransformationService(
       case _ if fileContent.length <= Constant.HeadIndex => Future.successful(FailureTransformation())
       case name if name.matches(Constant.SingleFileNameRegex) && fileContent.length == Constant.SinglePaymentLength =>
         jsonConverter.convert(flow, fileContent, SinglePayment())
-      case _ => jsonConverter.convert(flow, fileContent, SeveralPayments())
+      case _ =>
+        println("eeeeeeez3")
+        jsonConverter.convert(flow, fileContent, SeveralPayments())
     }
   }
 

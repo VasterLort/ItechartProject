@@ -1,6 +1,6 @@
 package by.itechart.action
 
-import by.itechart.dao.{Dictionary, Flow, Retrieval, Transformation}
+import by.itechart.dao._
 import org.json4s.JValue
 
 sealed trait Notice
@@ -15,7 +15,11 @@ case class FailureRetrieval(message: String = "Request was failed!!!") extends N
 
 case class SuccessfulRequestForTransformation(flow: Seq[Transformation], message: String = "Request was completed!!!") extends Notice
 
-case class FailureTransformation(message: String = "Request was failed!!!") extends Notice
+case class FailureTransformation(message: String = "Transformation was failed!!!") extends Notice
+
+case class SuccessfulRequestForNormalization(flow: Seq[Normalization], message: String = "Request was completed!!!") extends Notice
+
+case class FailureNormalization(message: String = "Normalization was failed!!!") extends Notice
 
 case class EmptyFile(message: String = "File is empty") extends Notice
 
@@ -60,3 +64,7 @@ case class SinglePayment() extends Notice
 case class SeveralPayments() extends Notice
 
 case class TransformedPayments(payments: List[Transformation]) extends Notice
+
+case class NormalizedValue(values: Map[String, String]) extends Notice
+
+case class NormalizedPayments(payments: List[Normalization]) extends Notice

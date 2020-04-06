@@ -15,4 +15,5 @@ object Constant {
   final val CsvFormat = ".csv"
   final val XlsxFormat = ".xlsx"
   final val SingleFileNameRegex = "\\w+_\\w+_\\d{8}.(csv|xlst)"
+  final val Gender = "GENDER"
 }
