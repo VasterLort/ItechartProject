@@ -48,3 +48,11 @@ libraryDependencies += "commons-io" % "commons-io" % "2.6"
 
 libraryDependencies += "org.apache.poi" % "poi" % "4.1.2"
 libraryDependencies += "org.apache.poi" % "poi-ooxml" % "4.1.2"
+
+libraryDependencies += "org.json4s" %% "json4s-native" % "3.7.0-M2"
+
+libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.7.0-M2"
+
+libraryDependencies += "com.github.tminglei" %% "slick-pg" % "0.19.0"
+
+libraryDependencies += "com.github.tminglei" %% "slick-pg_json4s" % "0.19.0"

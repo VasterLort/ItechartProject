@@ -1,10 +1,10 @@
 package by.itechart.service
 
 import by.itechart.action._
+import by.itechart.constant.StateId
+import by.itechart.dao._
 import by.itechart.dao.initialization.Daos
-import by.itechart.dao.{Flow, FlowDao, Retrieval, RetrievalDao}
 import by.itechart.date.MyDate
-import by.itechart.enums.StateId
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -12,8 +12,10 @@ import scala.concurrent.Future
 class DatabaseService(
                        private val flowDao: FlowDao = Daos.flowDao,
                        private val retrievalDao: RetrievalDao = Daos.retrievalDao,
+                       private val transformationDao: TransformationDao = Daos.transformationDao,
                        private val retrievalService: RetrievalService = new RetrievalService(),
-                       private val transformationService: TransformationService = new TransformationService()
+                       private val transformationService: TransformationService = new TransformationService(),
+                       private val normalizationService: NormalizationService = new NormalizationService(),
                      ) {
 
   def insertRetrievalFlow(flow: Flow): Future[Notice] = {
@@ -31,15 +33,41 @@ class DatabaseService(
     }
   }
 
-  def insertTransformationFlow(flow: Retrieval): Notice = {
-    transformationService.getTransformedData(flow)
-  }
-
   def getRetrievalFlowById(flowId: String): Future[Notice] = {
     retrievalDao.getById(flowId).map {
       case Some(res) if res.flowId == flowId => SuccessfulRequestForRetrieval(res)
       case _ => FailureRequest()
     }
+  }
+
+  def insertTransformationFlow(flow: Retrieval): Future[Notice] = {
+    transformationService.getTransformedData(flow).flatMap {
+      case notice: TransformedPayments =>
+        transformationDao.insertAll(notice.payments).flatMap {
+          case res: Seq[Transformation] =>
+            insertFlow(Flow(flow.flowId, flow.fileName, StateId.transformationId.id, MyDate.getCurrentDate())).flatMap {
+              case _: SuccessfulRequest => Future.successful(SuccessfulRequestForTransformation(res))
+              case _ => Future.successful(FailureTransformation())
+            }
+          case _ => Future(FailureTransformation())
+        }
+      case _ => Future.successful(FailureTransformation())
+    }
+  }
+
+  def getTransformationFlowById(flowId: String): Future[Notice] = {
+    transformationDao.getById(flowId).map {
+      case res: Seq[Transformation] => SuccessfulRequestForTransformation(res)
+      case _ => FailureRequest()
+    }
+  }
+
+  def insertNormalizationFlow(flow: List[Transformation]): Future[Notice] = {
+    //normalizationService.getNormalizedPayment(flow)
+  }
+
+  def getNormalizationFlowById(flowId: String): Future[Notice] = {
+
   }
 
   def getFlowById(flowId: String, statusId: Long): Future[Notice] = {

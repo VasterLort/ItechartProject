@@ -1,7 +1,7 @@
 package by.itechart.action
 
 import akka.actor.ActorRef
-import by.itechart.dao.{Flow, Retrieval}
+import by.itechart.dao.{Flow, Retrieval, Transformation}
 
 sealed trait Message
 
@@ -43,7 +43,7 @@ case class PassToRetrievalState(flow: Flow, statesToActor: Map[Int, ActorRef]) e
 
 case class PassToTransformationState(flow: Retrieval, statesToActor: Map[Int, ActorRef]) extends Message
 
-case class PassToNormalizationState(flow: Flow, statesToActor: Map[Int, ActorRef]) extends Message
+case class PassToNormalizationState(flow: List[Transformation], statesToActor: Map[Int, ActorRef]) extends Message
 
 case class PassToValidationState(flow: Flow, statesToActor: Map[Int, ActorRef]) extends Message
 
