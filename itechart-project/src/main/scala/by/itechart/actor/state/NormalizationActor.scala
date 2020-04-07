@@ -20,7 +20,7 @@ class NormalizationActor(
 
   def receive = {
     case message: RunNormalizationState =>
-      ds.getFlowById(message.flowId, StateId.normalizationId.id).flatMap {
+      ds.getNormalizationFlowById(message.flowId).flatMap {
         case res: SuccessfulRequestForNormalization =>
           message.statesToActor(StateId.validationId.id) ?
             PassToValidationState(Flow(res.flow(Constant.StartIndex).flowId, res.flow(Constant.StartIndex).fileName, StateId.validationId.id, MyDate.getCurrentDate()), message.statesToActor)

@@ -63,6 +63,13 @@ class DatabaseService(
     }
   }
 
+  def getTransformationFlowByKeys(flowId: String, companyName: String, departmentName: String, payDate: String): Future[Notice] = {
+    transformationDao.getByKeys(flowId, companyName, departmentName, payDate).map {
+      case res: Seq[Transformation] => SuccessfulRequestForTransformation(res)
+      case _ => FailureTransformation()
+    }
+  }
+
   def insertNormalizationFlow(flow: List[Transformation]): Future[Notice] = {
     normalizationService.getNormalizedPayment(flow).flatMap {
       case notice: NormalizedPayments =>

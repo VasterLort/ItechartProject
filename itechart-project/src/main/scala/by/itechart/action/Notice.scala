@@ -1,5 +1,6 @@
 package by.itechart.action
 
+import by.itechart.conversion.Payments
 import by.itechart.dao._
 import org.json4s.JValue
 
@@ -43,7 +44,7 @@ case class PaymentFileNameAction() extends Notice
 
 case class PaymentFileName(name: java.util.Vector[_]) extends Notice
 
-case class ConversionPaymentsSucceed(json: List[JValue], keys: Map[String, String]) extends Notice
+case class ConversionPaymentsSucceed(payments: List[Payments]) extends Notice
 
 case class ConversionPaymentSucceed(json: JValue, keys: Array[String]) extends Notice
 
@@ -65,6 +66,7 @@ case class SeveralPayments() extends Notice
 
 case class TransformedPayments(payments: List[Transformation]) extends Notice
 
-case class NormalizedValue(values: Map[String, String]) extends Notice
+case class NormalizedValue(values: Map[String, String], flowId: String, fileName: String, companyName: String, departmentName: String, payDate: String) extends Notice
 
 case class NormalizedPayments(payments: List[Normalization]) extends Notice
+

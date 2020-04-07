@@ -14,6 +14,9 @@ import scala.concurrent.Future
 class NormalizationService(
                             private val dictionary: Dictionary = new Dictionary()
                           ) {
+
+  private final val Gender = "GENDER"
+
   def getNormalizedPayment(flow: List[Transformation]): Future[Notice] = {
     checkDictionary(flow)
   }
@@ -31,11 +34,12 @@ class NormalizationService(
       val map = parse(compact(render(payment.content))).extract[Map[String, String]]
       updateColumn(map, dictionary) match {
         case updatedMap if updatedMap.isEmpty => FailureNormalization()
-        case updatedMap => updateValue(updatedMap, dictionary)
+        case updatedMap =>
+          updateValue(updatedMap, dictionary, payment.flowId, payment.fileName, payment.companyName, payment.departmentName, payment.payDate)
       }
     }
 
-    preparePayments(res, flow(Constant.StartIndex))
+    preparePayments(res)
   }
 
   private def updateColumn(row: Map[String, String], dictionary: Map[String, String]): Map[String, String] = {
@@ -45,18 +49,18 @@ class NormalizationService(
     }.filter(!_._1.contains(Constant.FalseStatement))
   }
 
-  private def updateValue(row: Map[String, String], dictionary: Map[String, String]): Notice = {
+  private def updateValue(row: Map[String, String], dictionary: Map[String, String], flowId: String, fileName: String, companyName: String, departmentName: String, payDate: String): Notice = {
     row match {
-      case _ if row.contains(Constant.Gender) =>
-        row(Constant.Gender) match {
-          case gender if dictionary.contains(gender) => NormalizedValue(row.updated(Constant.Gender, dictionary(gender)))
-          case _ => NormalizedValue(row.removed(Constant.Gender))
+      case _ if row.contains(Gender) =>
+        row(Gender) match {
+          case gender if dictionary.contains(gender) => NormalizedValue(row.updated(Gender, dictionary(gender)), flowId, fileName, companyName, departmentName, payDate)
+          case _ => NormalizedValue(row.updated(Gender, Constant.FalseStatement), flowId, fileName, companyName, departmentName, payDate)
         }
       case _ => FailureNormalization()
     }
   }
 
-  private def preparePayments(normalizedPayment: List[Notice], flow: Transformation): Notice = {
+  private def preparePayments(normalizedPayment: List[Notice]): Notice = {
     implicit val formats = DefaultFormats
 
     val correctPayments = normalizedPayment
@@ -68,11 +72,11 @@ class NormalizationService(
         val payments = value.map { row =>
           val json = parse(compact(render(Extraction.decompose(row.values))))
           Normalization(
-            flow.flowId,
-            flow.fileName,
-            flow.companyName,
-            flow.departmentName,
-            flow.payDate,
+            row.flowId,
+            row.fileName,
+            row.companyName,
+            row.departmentName,
+            row.payDate,
             json,
             MyDate.getCurrentDate())
         }

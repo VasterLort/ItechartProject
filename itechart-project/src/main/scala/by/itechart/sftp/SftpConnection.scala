@@ -8,6 +8,10 @@ import com.jcraft.jsch.{ChannelSftp, JSch}
 import scala.io.Source
 
 object SftpConnection {
+
+  private final val CsvFormat = ".csv"
+  private final val XlsxFormat = ".xlsx"
+
   def getPaymentFile(fileName: String): Notice = {
     connectSftpServer(PaymentFileAction(fileName))
   }
@@ -72,8 +76,8 @@ object SftpConnection {
 
   private def checkPaymentFileName(paymentFileName: String): Notice = {
     paymentFileName.substring(paymentFileName.lastIndexOf(Constant.UselessInfo) + Constant.FileNameIndex) match {
-      case fileName if fileName.endsWith(Constant.CsvFormat) => CsvPaymentFileName(fileName)
-      case fileName if fileName.endsWith(Constant.XlsxFormat) => XlsxPaymentFileName(fileName)
+      case fileName if fileName.endsWith(CsvFormat) => CsvPaymentFileName(fileName)
+      case fileName if fileName.endsWith(XlsxFormat) => XlsxPaymentFileName(fileName)
       case _ => InvalidFileName()
     }
   }

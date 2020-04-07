@@ -25,6 +25,7 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val initializationValidationState = jsonFormat1(InitValidationState)
   implicit val initializationLoadState = jsonFormat1(InitLoadState)
   implicit val initializationFinishState = jsonFormat1(InitFinishState)
+  implicit val initializationTransformationStateByKeys = jsonFormat4(InitTransformationStateByKeys)
 }
 
 class SupervisorService(supervisor: ActorRef)(implicit executionContext: ExecutionContext) extends Directives with JsonSupport {
@@ -66,8 +67,7 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
   @Path("/flows/{flowId}/states/starting")
   @Operation(
     parameters = Array(
-      new Parameter(name = "flowId", in = ParameterIn.PATH, required = true,
-        schema = new Schema(implementation = classOf[String]))
+      new Parameter(name = "flowId", in = ParameterIn.PATH, required = true, schema = new Schema(implementation = classOf[String]))
     ),
   )
   def initStartState(flowId: String) =
@@ -88,8 +88,7 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
   @Path("/flows/{flowId}/states/retrieving")
   @Operation(
     parameters = Array(
-      new Parameter(name = "flowId", in = ParameterIn.PATH, required = true,
-        schema = new Schema(implementation = classOf[String]))
+      new Parameter(name = "flowId", in = ParameterIn.PATH, required = true, schema = new Schema(implementation = classOf[String]))
     ),
   )
   def initRetrievalState(flowId: String) =
@@ -110,8 +109,7 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
   @Path("/flows/{flowId}/states/transforming")
   @Operation(
     parameters = Array(
-      new Parameter(name = "flowId", in = ParameterIn.PATH, required = true,
-        schema = new Schema(implementation = classOf[String]))
+      new Parameter(name = "flowId", in = ParameterIn.PATH, required = true, schema = new Schema(implementation = classOf[String]))
     ),
   )
   def initTransformationState(flowId: String) =
@@ -132,8 +130,7 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
   @Path("/flows/{flowId}/states/normalizing")
   @Operation(
     parameters = Array(
-      new Parameter(name = "flowId", in = ParameterIn.PATH, required = true,
-        schema = new Schema(implementation = classOf[String]))
+      new Parameter(name = "flowId", in = ParameterIn.PATH, required = true, schema = new Schema(implementation = classOf[String]))
     ),
   )
   def initNormalizationState(flowId: String) =
@@ -154,8 +151,7 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
   @Path("/flows/{flowId}/states/validating")
   @Operation(
     parameters = Array(
-      new Parameter(name = "flowId", in = ParameterIn.PATH, required = true,
-        schema = new Schema(implementation = classOf[String]))
+      new Parameter(name = "flowId", in = ParameterIn.PATH, required = true, schema = new Schema(implementation = classOf[String]))
     ),
   )
   def initValidationState(flowId: String) =
@@ -176,8 +172,7 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
   @Path("/flows/{flowId}/states/loading")
   @Operation(
     parameters = Array(
-      new Parameter(name = "flowId", in = ParameterIn.PATH, required = true,
-        schema = new Schema(implementation = classOf[String]))
+      new Parameter(name = "flowId", in = ParameterIn.PATH, required = true, schema = new Schema(implementation = classOf[String]))
     ),
   )
   def initLoadState(flowId: String) =
@@ -198,8 +193,7 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
   @Path("/flows/{flowId}/states/finishing")
   @Operation(
     parameters = Array(
-      new Parameter(name = "flowId", in = ParameterIn.PATH, required = true,
-        schema = new Schema(implementation = classOf[String]))
+      new Parameter(name = "flowId", in = ParameterIn.PATH, required = true, schema = new Schema(implementation = classOf[String]))
     ),
   )
   def initFinishState(flowId: String) =

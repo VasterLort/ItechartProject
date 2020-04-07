@@ -1,5 +1,6 @@
 package by.itechart.dao
 
+import by.itechart.constant.Constant
 import by.itechart.database.DatabaseConfig
 import by.itechart.database.MyPostgresProfile.api._
 import org.json4s.JValue
@@ -23,7 +24,8 @@ class NormalizationDao(val dbProvider: DatabaseConfig.type = DatabaseConfig) {
   private val scheme = TableQuery[NormalizationTable]
 
   def insertAll(flow: List[Normalization]): Future[Seq[Normalization]] = {
-    db.run((scheme returning scheme.map(_.recordId) into ((instance, recordId) => instance.copy(recordId = recordId))) ++= flow)
+    db.run(scheme.filter(_.flowId === flow(Constant.StartIndex).flowId).delete
+      .andThen((scheme returning scheme.map(_.recordId) into ((instance, recordId) => instance.copy(recordId = recordId))) ++= flow))
   }
 
   def getById(flowId: String): Future[Seq[Normalization]] = {

@@ -1,9 +1,8 @@
 package by.itechart.service
 
 import by.itechart.action._
-import by.itechart.conf.DictionaryConf
 import by.itechart.constant.{Constant, KeyId}
-import by.itechart.conversion.CsvToJsonConverter
+import by.itechart.conversion.{CsvToJsonConverter, Payments}
 import by.itechart.dao.{Retrieval, Transformation}
 import by.itechart.date.MyDate
 import org.json4s.JsonAST.JValue
@@ -14,10 +13,14 @@ import scala.concurrent.Future
 class TransformationService(
                              private val jsonConverter: CsvToJsonConverter = new CsvToJsonConverter()
                            ) {
+
+  private final val SinglePaymentLength = 2
+  private final val SingleFileNameRegex = "\\w+_\\w+_\\d{8}.(csv|xlst)"
+
   def getTransformedData(flow: Retrieval): Future[Notice] = {
     checkFileName(flow).map {
       case notice: ConversionPaymentSucceed => transformSinglePayment(flow, notice.json, notice.keys)
-      case notice: ConversionPaymentsSucceed => transformListPayments(flow, notice.json, notice.keys)
+      case notice: ConversionPaymentsSucceed => transformListPayments(flow, notice.payments)
       case _ => FailureTransformation()
     }
   }
@@ -31,11 +34,9 @@ class TransformationService(
 
     flow.fileName match {
       case _ if fileContent.length <= Constant.HeadIndex => Future.successful(FailureTransformation())
-      case name if name.matches(Constant.SingleFileNameRegex) && fileContent.length == Constant.SinglePaymentLength =>
+      case name if name.matches(SingleFileNameRegex) && fileContent.length == SinglePaymentLength =>
         jsonConverter.convert(flow, fileContent, SinglePayment())
-      case _ =>
-        println("eeeeeeez3")
-        jsonConverter.convert(flow, fileContent, SeveralPayments())
+      case _ => jsonConverter.convert(flow, fileContent, SeveralPayments())
     }
   }
 
@@ -44,15 +45,15 @@ class TransformationService(
     TransformedPayments(result)
   }
 
-  private def transformListPayments(flow: Retrieval, json: List[JValue], keys: Map[String, String]): Notice = {
-    val result = (Constant.StartIndex until json.length).map { i =>
+  private def transformListPayments(flow: Retrieval, payments: List[Payments]): Notice = {
+    val result = (Constant.StartIndex until payments.length).map { i =>
       Transformation(
         flow.flowId,
         flow.fileName,
-        keys(DictionaryConf.configValues.company),
-        keys(DictionaryConf.configValues.department),
-        keys(DictionaryConf.configValues.payDate),
-        json(i),
+        payments(i).companyName,
+        payments(i).departmentName,
+        payments(i).payDate,
+        payments(i).columns,
         MyDate.getCurrentDate())
     }.toList
 

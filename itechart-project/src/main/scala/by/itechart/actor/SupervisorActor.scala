@@ -39,5 +39,8 @@ class SupervisorActor extends Actor with ActorLogging {
       (statesToActor(StateId.loadId.id) ? RunLoadState(message.flowId, statesToActor)).mapTo[Notice].pipeTo(sender())
     case message: InitFinishState =>
       (statesToActor(StateId.finishId.id) ? RunFinishState(message.flowId, statesToActor)).mapTo[Notice].pipeTo(sender())
+    case message: InitTransformationStateByKeys =>
+      (statesToActor(StateId.transformationId.id) ?
+        RunTransformationStateByKeys(message.flowId, message.companyName, message.departmentName, message.payDate, statesToActor)).mapTo[Notice].pipeTo(sender())
   }
 }

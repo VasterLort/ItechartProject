@@ -24,6 +24,13 @@ class TransformationActor(
             PassToNormalizationState(res.flow.toList, message.statesToActor)
         case _ => Future.successful(FailureRequest())
       }.mapTo[Notice].pipeTo(sender())
+    case message: RunTransformationStateByKeys =>
+      ds.getTransformationFlowByKeys(message.flowId, message.companyName, message.departmentName, message.payDate).flatMap {
+        case res: SuccessfulRequestForTransformation =>
+          message.statesToActor(StateId.normalizationId.id) ?
+            PassToNormalizationState(res.flow.toList, message.statesToActor)
+        case _ => Future.successful(FailureRequest())
+      }.mapTo[Notice].pipeTo(sender())
     case message: PassToTransformationState =>
       ds.insertTransformationFlow(message.flow).flatMap {
         case res: SuccessfulRequestForTransformation =>
