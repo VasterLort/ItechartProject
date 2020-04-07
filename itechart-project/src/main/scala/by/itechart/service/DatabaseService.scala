@@ -12,7 +12,8 @@ import scala.concurrent.Future
 class DatabaseService(
                        private val flowDao: FlowDao = Daos.flowDao,
                        private val retrievalDao: RetrievalDao = Daos.retrievalDao,
-                       private val retrievalService: RetrievalService = new RetrievalService()
+                       private val retrievalService: RetrievalService = new RetrievalService(),
+                       private val transformationService: TransformationService = new TransformationService()
                      ) {
 
   def insertRetrievalFlow(flow: Flow): Future[Notice] = {
@@ -28,6 +29,10 @@ class DatabaseService(
         }
       case _ => Future.successful(FailureRetrieval())
     }
+  }
+
+  def insertTransformationFlow(flow: Retrieval): Notice = {
+    transformationService.getTransformedData(flow)
   }
 
   def getRetrievalFlowById(flowId: String): Future[Notice] = {

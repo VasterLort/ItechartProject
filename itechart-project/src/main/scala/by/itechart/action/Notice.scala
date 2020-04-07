@@ -31,3 +31,7 @@ case class PaymentFileAction(name: String) extends Notice
 case class PaymentFileNameAction() extends Notice
 
 case class PaymentFileName(name: java.util.Vector[_]) extends Notice
+
+case class SinglePayment() extends Notice
+
+case class MultiplePayments() extends Notice

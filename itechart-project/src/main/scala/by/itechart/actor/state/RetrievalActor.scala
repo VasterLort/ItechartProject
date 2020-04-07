@@ -30,7 +30,7 @@ class RetrievalActor(
       ds.insertRetrievalFlow(message.flow).flatMap {
         case res: SuccessfulRequestForRetrieval =>
           message.statesToActor(StateId.transformationId.id) ?
-            PassToTransformationState(Flow(res.flow.flowId, res.flow.fileName, StateId.transformationId.id, MyDate.getCurrentDate()), message.statesToActor)
+            PassToTransformationState(res.flow, message.statesToActor)
         case _ => Future.successful(FailureRequest())
       }.mapTo[Notice].pipeTo(sender())
   }
