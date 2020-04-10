@@ -21,6 +21,10 @@ case class InitLoadState(flowId: String) extends Message
 
 case class InitFinishState(flowId: String) extends Message
 
+case class InitTransformationStateByKeys(flowId: String, companyName: String, departmentName: String, payDate: String) extends Message
+
+case class InitNormalizationStateByKeys(flowId: String, companyName: String, departmentName: String, payDate: String) extends Message
+
 case class RunInitializationState(statesToActor: Map[Int, ActorRef]) extends Message
 
 case class RunStartState(flowId: String, statesToActor: Map[Int, ActorRef]) extends Message
@@ -36,6 +40,10 @@ case class RunValidationState(flowId: String, statesToActor: Map[Int, ActorRef])
 case class RunLoadState(flowId: String, statesToActor: Map[Int, ActorRef]) extends Message
 
 case class RunFinishState(flowId: String, statesToActor: Map[Int, ActorRef]) extends Message
+
+case class RunTransformationStateByKeys(flowId: String, companyName: String, departmentName: String, payDate: String, statesToActor: Map[Int, ActorRef]) extends Message
+
+case class RunNormalizationStateByKeys(flowId: String, companyName: String, departmentName: String, payDate: String, statesToActor: Map[Int, ActorRef]) extends Message
 
 case class PassToStartState(fileName: String, statesToActor: Map[Int, ActorRef]) extends Message
 

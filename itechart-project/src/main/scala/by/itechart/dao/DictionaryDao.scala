@@ -30,7 +30,7 @@ class DictionaryDao(
     db.run(dictionary.result)
   }
 
-  private class DictionaryTable(tag: Tag) extends Table[Dictionary](tag, "dictionary_view") {
+  private class DictionaryTable(tag: Tag) extends Table[Dictionary](tag, "dictionary") {
     def keyName = column[String]("key_name")
 
     def valueName = column[String]("value_name")

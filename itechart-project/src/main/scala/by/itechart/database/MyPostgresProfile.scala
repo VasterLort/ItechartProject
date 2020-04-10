@@ -6,7 +6,7 @@ import slick.jdbc.JdbcType
 
 trait MyPostgresProfile extends ExPostgresProfile
   with PgJson4sSupport {
-  def pgjson = "jsonb" // jsonb support is in postgres 9.4.0 onward; for 9.3.x use "json"
+  def pgjson = "jsonb"
 
   override val api = MyAPI
 
