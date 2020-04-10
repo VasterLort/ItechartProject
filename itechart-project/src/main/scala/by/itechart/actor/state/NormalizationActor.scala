@@ -5,8 +5,6 @@ import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import by.itechart.action.{FailureRequest, _}
 import by.itechart.constant.{Constant, StateId}
-import by.itechart.dao.Flow
-import by.itechart.date.MyDate
 import by.itechart.service.DatabaseService
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -23,14 +21,21 @@ class NormalizationActor(
       ds.getNormalizationFlowById(message.flowId).flatMap {
         case res: SuccessfulRequestForNormalization =>
           message.statesToActor(StateId.validationId.id) ?
-            PassToValidationState(Flow(res.flow(Constant.StartIndex).flowId, res.flow(Constant.StartIndex).fileName, StateId.validationId.id, MyDate.getCurrentDate()), message.statesToActor)
+            PassToValidationState(res.flow.toList, message.statesToActor)
+        case _ => Future.successful(FailureRequest())
+      }.mapTo[Notice].pipeTo(sender())
+    case message: RunNormalizationStateByKeys =>
+      ds.getNormalizationFlowByKeys(message.flowId, message.companyName, message.departmentName, message.payDate).flatMap {
+        case res: SuccessfulRequestForNormalization =>
+          message.statesToActor(StateId.validationId.id) ?
+            PassToValidationState(res.flow.toList, message.statesToActor)
         case _ => Future.successful(FailureRequest())
       }.mapTo[Notice].pipeTo(sender())
     case message: PassToNormalizationState =>
       ds.insertNormalizationFlow(message.flow).flatMap {
         case res: SuccessfulRequestForNormalization =>
           message.statesToActor(StateId.validationId.id) ?
-            PassToValidationState(Flow(res.flow(Constant.StartIndex).flowId, res.flow(Constant.StartIndex).fileName, StateId.validationId.id, MyDate.getCurrentDate()), message.statesToActor)
+            PassToValidationState(res.flow.toList, message.statesToActor)
         case _ => Future.successful(FailureRequest())
       }.mapTo[Notice].pipeTo(sender())
   }

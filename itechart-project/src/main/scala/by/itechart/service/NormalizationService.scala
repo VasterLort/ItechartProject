@@ -12,10 +12,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class NormalizationService(
-                            private val dictionary: Dictionary = new Dictionary()
+                            private val dictionary: Dictionary = new Dictionary(),
+                            private val myDate: MyDate.type = MyDate
                           ) {
-
-  private final val Gender = "GENDER"
 
   def getNormalizedPayment(flow: List[Transformation]): Future[Notice] = {
     checkDictionary(flow)
@@ -50,14 +49,42 @@ class NormalizationService(
   }
 
   private def updateValue(row: Map[String, String], dictionary: Map[String, String], flowId: String, fileName: String, companyName: String, departmentName: String, payDate: String): Notice = {
-    row match {
-      case _ if row.contains(Gender) =>
-        row(Gender) match {
-          case gender if dictionary.contains(gender) => NormalizedValue(row.updated(Gender, dictionary(gender)), flowId, fileName, companyName, departmentName, payDate)
-          case _ => NormalizedValue(row.updated(Gender, Constant.FalseStatement), flowId, fileName, companyName, departmentName, payDate)
+    val res = row.map {
+      case r if r._1 == Constant.Gender =>
+        r._2 match {
+          case gender if dictionary.contains(gender) =>
+            r._1 -> dictionary(gender)
+          case _ => r._1 -> Constant.FalseStatement
         }
-      case _ => FailureNormalization()
+      case r if r._1 == Constant.BirthDate =>
+        r._2 match {
+          case birthDate if myDate.convert(birthDate).isInstanceOf[CorrectDate] =>
+            r._1 -> myDate.convert(birthDate).asInstanceOf[CorrectDate].date
+          case _ => r._1 -> Constant.FalseStatement
+        }
+      case r if r._1 == Constant.PayDate =>
+        r._2 match {
+          case p if myDate.convert(p).isInstanceOf[CorrectDate] =>
+            r._1 -> myDate.convert(p).asInstanceOf[CorrectDate].date
+          case _ => r._1 -> Constant.FalseStatement
+        }
+      case r if r._1 == Constant.HireDate =>
+        r._2 match {
+          case hireDate if myDate.convert(hireDate).isInstanceOf[CorrectDate] =>
+            r._1 -> myDate.convert(hireDate).asInstanceOf[CorrectDate].date
+          case _ => r._1 -> Constant.FalseStatement
+        }
+      case r if r._1 == Constant.DismissalDate =>
+        r._2 match {
+          case dismissalDate if myDate.convert(dismissalDate).isInstanceOf[CorrectDate] =>
+            r._1 -> myDate.convert(dismissalDate).asInstanceOf[CorrectDate].date
+          case _ => r._1 -> Constant.FalseStatement
+        }
+      case r => r._1 -> r._2
     }
+
+
+    NormalizedValue(res, flowId, fileName, companyName, departmentName, payDate)
   }
 
   private def preparePayments(normalizedPayment: List[Notice]): Notice = {

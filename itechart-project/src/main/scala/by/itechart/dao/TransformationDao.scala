@@ -1,11 +1,11 @@
 package by.itechart.dao
 
-import by.itechart.constant.Constant
 import by.itechart.database.DatabaseConfig
 import by.itechart.database.MyPostgresProfile.api._
 import org.json4s.JValue
 import slick.lifted.TableQuery
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 case class Transformation(
@@ -23,9 +23,20 @@ class TransformationDao(val dbProvider: DatabaseConfig.type = DatabaseConfig) {
   val db = dbProvider.db
   private val scheme = TableQuery[TransformationTable]
 
-  def insertAll(flow: List[Transformation]): Future[Seq[Transformation]] = {
-    db.run(scheme.filter(_.flowId === flow(Constant.StartIndex).flowId).delete
-      .andThen((scheme returning scheme.map(_.recordId) into ((instance, recordId) => instance.copy(recordId = recordId))) ++= flow))
+  private def insert(flow: Transformation): Future[Transformation] = {
+    db.run(scheme
+      .filter(payment => payment.flowId === flow.flowId &&
+        payment.companyName === flow.companyName &&
+        payment.departmentName === flow.departmentName &&
+        payment.payDate === flow.payDate)
+      .delete
+      .andThen((scheme returning scheme.map(_.recordId) into ((instance, recordId) => instance.copy(recordId = recordId))) += flow))
+  }
+
+  def insertAll(flows: List[Transformation]): Future[Seq[Transformation]] = {
+    Future.sequence(flows.map { flow =>
+      insert(flow)
+    })
   }
 
   def getById(flowId: String): Future[Seq[Transformation]] = {
