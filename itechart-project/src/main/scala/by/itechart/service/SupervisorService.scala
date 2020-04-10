@@ -6,7 +6,8 @@ import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives
 import akka.pattern.ask
 import akka.util.Timeout
-import by.itechart.action.{InitLoadState, _}
+import by.itechart.action.{InitLoadState, InitNormalizationStateByKeys, _}
+import by.itechart.constant.Constant
 import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.{Operation, Parameter}
@@ -26,10 +27,11 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val initializationLoadState = jsonFormat1(InitLoadState)
   implicit val initializationFinishState = jsonFormat1(InitFinishState)
   implicit val initializationTransformationStateByKeys = jsonFormat4(InitTransformationStateByKeys)
+  implicit val initializationNormalizationStateByKeys = jsonFormat4(InitNormalizationStateByKeys)
 }
 
 class SupervisorService(supervisor: ActorRef)(implicit executionContext: ExecutionContext) extends Directives with JsonSupport {
-  implicit val timeout = Timeout(120.seconds)
+  implicit val timeout = Timeout(Constant.TimeoutSec.seconds)
 
   val route =
     createFlow ~
@@ -109,18 +111,31 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
   @Path("/flows/{flowId}/states/transforming")
   @Operation(
     parameters = Array(
-      new Parameter(name = "flowId", in = ParameterIn.PATH, required = true, schema = new Schema(implementation = classOf[String]))
+      new Parameter(name = "flowId", in = ParameterIn.PATH, required = true, schema = new Schema(implementation = classOf[String])),
+      new Parameter(name = "companyName", in = ParameterIn.QUERY, required = false),
+      new Parameter(name = "departmentName", in = ParameterIn.QUERY, required = false),
+      new Parameter(name = "payDate", in = ParameterIn.QUERY, required = false)
     ),
   )
   def initTransformationState(flowId: String) =
     pathPrefix("transforming") {
       pathEndOrSingleSlash {
         post {
-          val res = (supervisor ? InitTransformationState(flowId)).map {
-            case _: SuccessfulRequest => HttpResponse(StatusCodes.OK)
-            case _: FailureRequest => HttpResponse(StatusCodes.NotFound)
+          parameters("companyName".as[String].?, "departmentName".as[String].?, "payDate".as[String].?) { (companyName, departmentName, payDate) ⇒
+            val res =
+              if (companyName.isDefined && departmentName.isDefined && payDate.isDefined) {
+                (supervisor ? InitTransformationStateByKeys(flowId, companyName.get, departmentName.get, payDate.get)).map {
+                  case _: SuccessfulRequest => HttpResponse(StatusCodes.OK)
+                  case _: FailureRequest => HttpResponse(StatusCodes.NotFound)
+                }
+              } else {
+                (supervisor ? InitTransformationState(flowId)).map {
+                  case _: SuccessfulRequest => HttpResponse(StatusCodes.OK)
+                  case _: FailureRequest => HttpResponse(StatusCodes.NotFound)
+                }
+              }
+            complete(res)
           }
-          complete(res)
         }
       }
     }
@@ -130,18 +145,31 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
   @Path("/flows/{flowId}/states/normalizing")
   @Operation(
     parameters = Array(
-      new Parameter(name = "flowId", in = ParameterIn.PATH, required = true, schema = new Schema(implementation = classOf[String]))
+      new Parameter(name = "flowId", in = ParameterIn.PATH, required = true, schema = new Schema(implementation = classOf[String])),
+      new Parameter(name = "companyName", in = ParameterIn.QUERY, required = false),
+      new Parameter(name = "departmentName", in = ParameterIn.QUERY, required = false),
+      new Parameter(name = "payDate", in = ParameterIn.QUERY, required = false)
     ),
   )
   def initNormalizationState(flowId: String) =
     pathPrefix("normalizing") {
       pathEndOrSingleSlash {
         post {
-          val res = (supervisor ? InitNormalizationState(flowId)).map {
-            case _: SuccessfulRequest => HttpResponse(StatusCodes.OK)
-            case _: FailureRequest => HttpResponse(StatusCodes.NotFound)
+          parameters("companyName".as[String].?, "departmentName".as[String].?, "payDate".as[String].?) { (companyName, departmentName, payDate) ⇒
+            val res =
+              if (companyName.isDefined && departmentName.isDefined && payDate.isDefined) {
+                (supervisor ? InitNormalizationStateByKeys(flowId, companyName.get, departmentName.get, payDate.get)).map {
+                  case _: SuccessfulRequest => HttpResponse(StatusCodes.OK)
+                  case _: FailureRequest => HttpResponse(StatusCodes.NotFound)
+                }
+              } else {
+                (supervisor ? InitNormalizationState(flowId)).map {
+                  case _: SuccessfulRequest => HttpResponse(StatusCodes.OK)
+                  case _: FailureRequest => HttpResponse(StatusCodes.NotFound)
+                }
+              }
+            complete(res)
           }
-          complete(res)
         }
       }
     }

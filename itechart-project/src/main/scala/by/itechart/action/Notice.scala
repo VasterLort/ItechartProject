@@ -50,6 +50,10 @@ case class ConversionPaymentSucceed(json: JValue, keys: Array[String]) extends N
 
 case class ConversionError(message: String = "Conversion error Csv to Json!!!") extends Notice
 
+case class CorrectDate(date: String) extends Notice
+
+case class IncorrectDate() extends Notice
+
 case class CorrectKeys(value: Map[String, String]) extends Notice
 
 case class IncorrectKeys(message: String = "Incorrect Keys!!!") extends Notice
@@ -66,7 +70,35 @@ case class SeveralPayments() extends Notice
 
 case class TransformedPayments(payments: List[Transformation]) extends Notice
 
+case class PreparedTransformedPayment(payment: Transformation) extends Notice
+
 case class NormalizedValue(values: Map[String, String], flowId: String, fileName: String, companyName: String, departmentName: String, payDate: String) extends Notice
 
 case class NormalizedPayments(payments: List[Normalization]) extends Notice
+
+case class FailedValidation(message: String) extends Notice
+
+case class CorrectColumnsValidationState(payment: Map[String, String]) extends Notice
+
+case class PaymentForValidating(payment: Validation) extends Notice
+
+case class PaymentForReporting(flowId: String, fileName: String, companyName: String, departmentName: String, payDate: String, notice: FailedValidation) extends Notice
+
+case class SuccessfulSave() extends Notice
+
+case class UnsuccessfulSave() extends Notice
+
+case class ValidatedPayments(payments: List[Validation]) extends Notice
+
+case class SuccessfulRequestForValidation(flow: Seq[Validation], message: String = "Request was completed!!!") extends Notice
+
+case class FailureValidation(message: String = "Validation was failed!!!") extends Notice
+
+case class SuccessfulValidation(message: String = "Successful was failed!!!") extends Notice
+
+case class FailureValidationList(messages: List[FailureValidation]) extends Notice
+
+case class CorrectValue() extends Notice
+
+
 

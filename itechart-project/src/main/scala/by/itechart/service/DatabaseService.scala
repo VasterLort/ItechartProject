@@ -14,9 +14,11 @@ class DatabaseService(
                        private val retrievalDao: RetrievalDao = Daos.retrievalDao,
                        private val transformationDao: TransformationDao = Daos.transformationDao,
                        private val normalizationDao: NormalizationDao = Daos.normalizationDao,
+                       private val validationDao: ValidationDao = Daos.validationDao,
                        private val retrievalService: RetrievalService = new RetrievalService(),
                        private val transformationService: TransformationService = new TransformationService(),
                        private val normalizationService: NormalizationService = new NormalizationService(),
+                       private val validationService: ValidationService = new ValidationService(),
                      ) {
 
   def insertRetrievalFlow(flow: Flow): Future[Notice] = {
@@ -89,6 +91,42 @@ class DatabaseService(
     normalizationDao.getById(flowId).map {
       case res: Seq[Normalization] => SuccessfulRequestForNormalization(res)
       case _ => FailureNormalization()
+    }
+  }
+
+  def getNormalizationFlowByKeys(flowId: String, companyName: String, departmentName: String, payDate: String): Future[Notice] = {
+    normalizationDao.getByKeys(flowId, companyName, departmentName, payDate).map {
+      case res: Seq[Normalization] => SuccessfulRequestForNormalization(res)
+      case _ => FailureNormalization()
+    }
+  }
+
+  def insertValidationFlow(flow: List[Normalization]): Future[Notice] = {
+    validationService.getValidatedPayments(flow) match {
+      case notice: ValidatedPayments =>
+        validationDao.insertAll(notice.payments).flatMap {
+          case res: Seq[Validation] =>
+            insertFlow(Flow(flow(Constant.StartIndex).flowId, flow(Constant.StartIndex).fileName, StateId.validationId.id, MyDate.getCurrentDate())).flatMap {
+              case _: SuccessfulRequest => Future.successful(SuccessfulRequestForValidation(res))
+              case _ => Future.successful(FailureValidation())
+            }
+          case _ => Future(FailureValidation())
+        }
+      case _ => Future.successful(FailureValidation())
+    }
+  }
+
+  def getValidationFlowById(flowId: String): Future[Notice] = {
+    validationDao.getById(flowId).map {
+      case res: Seq[Validation] => SuccessfulRequestForValidation(res)
+      case _ => FailureValidation()
+    }
+  }
+
+  def getValidationFlowByKeys(flowId: String, companyName: String, departmentName: String, payDate: String): Future[Notice] = {
+    validationDao.getByKeys(flowId, companyName, departmentName, payDate).map {
+      case res: Seq[Validation] => SuccessfulRequestForValidation(res)
+      case _ => FailureValidation()
     }
   }
 

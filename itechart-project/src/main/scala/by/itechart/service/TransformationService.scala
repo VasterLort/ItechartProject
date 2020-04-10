@@ -11,7 +11,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class TransformationService(
-                             private val jsonConverter: CsvToJsonConverter = new CsvToJsonConverter()
+                             private val jsonConverter: CsvToJsonConverter = new CsvToJsonConverter(),
+                             private val myDate: MyDate.type = MyDate
                            ) {
 
   private final val SinglePaymentLength = 2
@@ -41,22 +42,43 @@ class TransformationService(
   }
 
   private def transformSinglePayment(flow: Retrieval, json: JValue, keys: Array[String]): Notice = {
-    val result = List(Transformation(flow.flowId, flow.fileName, keys(KeyId.companyId.id), keys(KeyId.departmentId.id), keys(KeyId.payDateId.id), json, MyDate.getCurrentDate()))
-    TransformedPayments(result)
+    myDate.convert(keys(KeyId.payDateId.id).trim) match {
+      case payDate: CorrectDate =>
+        TransformedPayments(List(
+          Transformation(
+            flow.flowId,
+            flow.fileName,
+            keys(KeyId.companyId.id).trim,
+            keys(KeyId.departmentId.id).trim,
+            payDate.date,
+            json,
+            MyDate.getCurrentDate())
+        ))
+      case _ => IncorrectDate()
+    }
   }
 
   private def transformListPayments(flow: Retrieval, payments: List[Payments]): Notice = {
     val result = (Constant.StartIndex until payments.length).map { i =>
-      Transformation(
-        flow.flowId,
-        flow.fileName,
-        payments(i).companyName,
-        payments(i).departmentName,
-        payments(i).payDate,
-        payments(i).columns,
-        MyDate.getCurrentDate())
-    }.toList
+      myDate.convert(payments(i).payDate.trim) match {
+        case payDate: CorrectDate =>
+          PreparedTransformedPayment(
+            Transformation(
+              flow.flowId,
+              flow.fileName,
+              payments(i).companyName.trim,
+              payments(i).departmentName.trim,
+              payDate.date,
+              payments(i).columns,
+              MyDate.getCurrentDate())
+          )
+        case _ => IncorrectDate()
+      }
+    }.toList.filter(_.isInstanceOf[PreparedTransformedPayment])
 
-    TransformedPayments(result)
+    result match {
+      case list if list.isEmpty => FailureTransformation()
+      case list => TransformedPayments(list.map(value => value.asInstanceOf[PreparedTransformedPayment].payment))
+    }
   }
 }
