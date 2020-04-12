@@ -105,7 +105,3 @@ case class CorrectValue() extends Notice
 case class PreparedPaymentsForLoading(payments: List[Load]) extends Notice
 
 case class FailureLoading() extends Notice
-
-case class Goood(message: String) extends Notice
-
-case class Noooooo(message: String) extends Notice

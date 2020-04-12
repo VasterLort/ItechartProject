@@ -3,7 +3,7 @@ package by.itechart.service
 import akka.actor.ActorRef
 import akka.http.scaladsl.common.{EntityStreamingSupport, JsonEntityStreamingSupport}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
+import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives
 import akka.pattern.ask
 import akka.util.Timeout
@@ -29,9 +29,6 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val initializationFinishState = jsonFormat1(InitFinishState)
   implicit val initializationTransformationStateByKeys = jsonFormat4(InitTransformationStateByKeys)
   implicit val initializationNormalizationStateByKeys = jsonFormat4(InitNormalizationStateByKeys)
-
-  implicit val good = jsonFormat1(Goood)
-  implicit val notgood = jsonFormat1(Noooooo)
 }
 
 class SupervisorService(supervisor: ActorRef)(implicit executionContext: ExecutionContext) extends Directives with JsonSupport {
@@ -130,16 +127,16 @@ class SupervisorService(supervisor: ActorRef)(implicit executionContext: Executi
             val res =
               if (companyName.isDefined && departmentName.isDefined && payDate.isDefined) {
                 (supervisor ? InitTransformationStateByKeys(flowId, companyName.get, departmentName.get, payDate.get)).map {
-                  case _: SuccessfulRequest => Goood("Yeeeeeees")
-                  case _: FailureRequest => Noooooo("Noooooo")
+                  case _: SuccessfulRequest => HttpResponse(StatusCodes.OK)
+                  case _: FailureRequest => HttpResponse(StatusCodes.NotFound)
                 }
               } else {
                 (supervisor ? InitTransformationState(flowId)).map {
-                  case _: SuccessfulRequest => Goood("Yeeeeeees")
-                  case _: FailureRequest => Noooooo("Noooooo")
+                  case _: SuccessfulRequest => HttpResponse(StatusCodes.OK)
+                  case _: FailureRequest => HttpResponse(StatusCodes.NotFound)
                 }
               }
-            complete(HttpResponse(404, entity = HttpEntity(ContentTypes.`application/json`, """{ "name": "Jane", "favoriteNumber" : 42 }""")))
+            complete(res)
           }
         }
       }
