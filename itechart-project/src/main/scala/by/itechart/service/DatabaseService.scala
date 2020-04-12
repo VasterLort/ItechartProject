@@ -15,10 +15,12 @@ class DatabaseService(
                        private val transformationDao: TransformationDao = Daos.transformationDao,
                        private val normalizationDao: NormalizationDao = Daos.normalizationDao,
                        private val validationDao: ValidationDao = Daos.validationDao,
+                       private val loadDao: LoadDao = Daos.loadDao,
                        private val retrievalService: RetrievalService = new RetrievalService(),
                        private val transformationService: TransformationService = new TransformationService(),
                        private val normalizationService: NormalizationService = new NormalizationService(),
                        private val validationService: ValidationService = new ValidationService(),
+                       private val loadService: LoadService = new LoadService(),
                      ) {
 
   def insertRetrievalFlow(flow: Flow): Future[Notice] = {
@@ -127,6 +129,35 @@ class DatabaseService(
     validationDao.getByKeys(flowId, companyName, departmentName, payDate).map {
       case res: Seq[Validation] => SuccessfulRequestForValidation(res)
       case _ => FailureValidation()
+    }
+  }
+
+  def insertLoadFlow(flow: List[Validation]): Future[Notice] = {
+    loadService.parsePayment(flow) match {
+      case notice: PreparedPaymentsForLoading =>
+        loadDao.insertAll(notice.payments).flatMap {
+          case res: Seq[Load] =>
+            insertFlow(Flow(flow(Constant.StartIndex).flowId, flow(Constant.StartIndex).fileName, StateId.loadId.id, MyDate.getCurrentDate())).flatMap {
+              case _: SuccessfulRequest => Future.successful(SuccessfulRequestForLoad(res))
+              case _ => Future.successful(FailureLoading())
+            }
+          case _ => Future(FailureLoading())
+        }
+      case _ => Future.successful(FailureLoading())
+    }
+  }
+
+  def getLoadFlowById(flowId: String): Future[Notice] = {
+    loadDao.getById(flowId).map {
+      case res: Seq[Load] => SuccessfulRequestForLoad(res)
+      case _ => FailureLoading()
+    }
+  }
+
+  def getLoadFlowByKeys(flowId: String, companyName: String, departmentName: String, payDate: String): Future[Notice] = {
+    loadDao.getByKeys(flowId, companyName, departmentName, payDate).map {
+      case res: Seq[Load] => SuccessfulRequestForLoad(res)
+      case _ => FailureLoading()
     }
   }
 

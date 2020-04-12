@@ -1,7 +1,7 @@
 package by.itechart.action
 
 import akka.actor.ActorRef
-import by.itechart.dao.{Flow, Normalization, Retrieval, Transformation}
+import by.itechart.dao._
 
 sealed trait Message
 
@@ -55,6 +55,6 @@ case class PassToNormalizationState(flow: List[Transformation], statesToActor: M
 
 case class PassToValidationState(flow: List[Normalization], statesToActor: Map[Int, ActorRef]) extends Message
 
-case class PassToLoadState(flow: Flow, statesToActor: Map[Int, ActorRef]) extends Message
+case class PassToLoadState(flow: List[Validation], statesToActor: Map[Int, ActorRef]) extends Message
 
 case class PassToFinishState(flow: Flow, statesToActor: Map[Int, ActorRef]) extends Message

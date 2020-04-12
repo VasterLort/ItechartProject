@@ -15,6 +15,7 @@ object MyDate {
   private val Format1 = "\\d{2}/\\d{2}/\\d{4}"
   private val Format2 = "\\d{8}"
   private val Format3 = "\\d{4}-\\d{2}-\\d{2}"
+  private val Format4 = "\\d{2}.\\d{2}.\\d{4}"
 
   private val DayEndIndexFormat1 = 2
   private val MonthStartIndexFormat1 = 3
@@ -30,6 +31,11 @@ object MyDate {
   private val MonthStartIndexFormat3 = 5
   private val MonthEndIndexFormat3 = 7
   private val YearStartIndexFormat3 = 8
+
+  private val DayEndIndexFormat4 = 2
+  private val MonthStartIndexFormat4 = 3
+  private val MonthEndIndexFormat4 = 5
+  private val YearStartIndexFormat4 = 6
 
   private lazy val formatter1 = DateTimeFormatter.ofPattern("ddMMyyyy")
   private lazy val formatter2 = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -76,6 +82,12 @@ object MyDate {
           v.substring(YearStartIndexFormat3),
           v.substring(MonthStartIndexFormat3, MonthEndIndexFormat3),
           v.substring(Constant.StartIndex, DayEndIndexFormat3)
+        )
+      case v if v.matches(Format4) =>
+        checkDateValue(
+          v.substring(Constant.StartIndex, DayEndIndexFormat4),
+          v.substring(MonthStartIndexFormat4, MonthEndIndexFormat4),
+          v.substring(YearStartIndexFormat4)
         )
       case _ => IncorrectDate()
     }

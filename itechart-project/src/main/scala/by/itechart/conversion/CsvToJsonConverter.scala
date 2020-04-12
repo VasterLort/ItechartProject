@@ -74,15 +74,16 @@ class CsvToJsonConverter(
       (value.contains(keys.value(DictionaryConf.configValues.payDate)) && value(keys.value(DictionaryConf.configValues.payDate)).nonEmpty))
 
     res match {
-      case list if list.nonEmpty => ConversionPaymentsSucceed(
-        list.map { map =>
-          Payments(
-            parse(compact(render(Extraction.decompose(map)))),
-            map(keys.value(DictionaryConf.configValues.company)),
-            map(keys.value(DictionaryConf.configValues.department)),
-            map(keys.value(DictionaryConf.configValues.payDate)))
-        }
-      )
+      case list if list.nonEmpty =>
+        ConversionPaymentsSucceed(
+          list.map { map =>
+            Payments(
+              parse(compact(render(Extraction.decompose(map)))),
+              map(keys.value(DictionaryConf.configValues.company)),
+              map(keys.value(DictionaryConf.configValues.department)),
+              map(keys.value(DictionaryConf.configValues.payDate)))
+          }
+        )
       case _ => ConversionError()
     }
   }

@@ -26,11 +26,6 @@ class ValidationService(
   private final val OptionalColumns = 1
   private final val NotRequiredColumns = "Missing required columns!!!"
   private final val NotHireDateColumns = "DismissalDate columns cannot be without HireDate columns!!!"
-  private final val HireDateValue = "Column with name HireDate doesn't have the correct value"
-  private final val DismissalDateValue = "Column with name DismissalDate doesn't have the correct value"
-  private final val GenderValue = "Column with name DismissalDate doesn't have the correct value"
-  private final val BirthDateValue = "Column with name BirthDate doesn't have the correct value"
-  private final val IdentificationNumberValue = "Column with name IdentificationNumber doesn't have the correct value"
   private final val IdentificationNumberPattern = "\\w{14}"
   private final val NumberOfColumnsRequired = 9
 
@@ -40,7 +35,7 @@ class ValidationService(
       case notice: PaymentForReporting =>
         paymentWriter.writeFile(notice) match {
           case _: Try[SuccessfulSave] => SuccessfulSave()
-          case _: Try[SuccessfulSave] => UnsuccessfulSave()
+          case _: Try[UnsuccessfulSave] => UnsuccessfulSave()
         }
     }
 
@@ -66,14 +61,7 @@ class ValidationService(
             MyDate.getCurrentDate()
           ))
         case notice: FailedValidation =>
-          PaymentForReporting(
-            flow(index).flowId,
-            flow(index).fileName,
-            flow(index).companyName,
-            flow(index).departmentName,
-            flow(index).payDate,
-            notice
-          )
+          sendReportAboutProblem(flow(index).flowId, flow(index).fileName, flow(index).companyName, flow(index).departmentName, flow(index).payDate, notice.message, 0)
       }
     }.toList
   }
@@ -112,24 +100,27 @@ class ValidationService(
   private def checkValues(notice: PaymentForValidating): Notice = {
     implicit val formats = org.json4s.DefaultFormats
 
-
-    val paymentMap = parse(compact(render(notice.payment.content))).extract[Map[String, String]]
+    val payment = notice.payment
+    val paymentMap = parse(compact(render(payment.content))).extract[Map[String, String]]
 
     val checkedValues = paymentMap.map {
+      case values if (values._1 == Constant.WorkingHours || values._1 == Constant.GrossAmount || values._1 == Constant.AtAmount || values._1 == Constant.Gender) &&
+        values._2 == Constant.FalseStatement =>
+        sendReportAboutProblem(payment.flowId, payment.fileName, payment.companyName, payment.departmentName, payment.payDate, values._1, 1)
       case values if values._1 == IdentificationNumber && !values._2.matches(IdentificationNumberPattern) =>
-        sendReportAboutValue(notice, IdentificationNumberValue)
+        sendReportAboutProblem(payment.flowId, payment.fileName, payment.companyName, payment.departmentName, payment.payDate, values._1, 1)
       case values if values._1 == Constant.BirthDate && (values._2 == Constant.FalseStatement ||
         myDate.getConvertedDate(values._2).isBefore(myDate.getTheEarliestDate) ||
         myDate.getConvertedDate(values._2).isAfter(myDate.getTheLatestDate)) =>
-        sendReportAboutValue(notice, BirthDateValue)
+        sendReportAboutProblem(payment.flowId, payment.fileName, payment.companyName, payment.departmentName, payment.payDate, values._1, 1)
       case values if values._1 == Constant.HireDate && (values._2 == Constant.FalseStatement ||
         myDate.getConvertedDate(values._2).isBefore(myDate.getConvertedDate(paymentMap(Constant.BirthDate)))) =>
-        sendReportAboutValue(notice, HireDateValue)
+        sendReportAboutProblem(payment.flowId, payment.fileName, payment.companyName, payment.departmentName, payment.payDate, values._1, 1)
       case values if values._1 == Constant.DismissalDate && (values._2 == Constant.FalseStatement ||
         myDate.getConvertedDate(values._2).isBefore(myDate.getConvertedDate(paymentMap(Constant.HireDate)))) =>
-        sendReportAboutValue(notice, DismissalDateValue)
-      case values if values._1 == Constant.Gender && values._2 == Constant.FalseStatement =>
-        sendReportAboutValue(notice, GenderValue)
+        sendReportAboutProblem(payment.flowId, payment.fileName, payment.companyName, payment.departmentName, payment.payDate, values._1, 1)
+      case values if values._1 == Constant.GrossAmount && values._2.toInt < paymentMap(Constant.AtAmount).toInt =>
+        sendReportAboutProblem(payment.flowId, payment.fileName, payment.companyName, payment.departmentName, payment.payDate, values._1, 1)
       case _ => CorrectValue()
     }.toList.filter(!_.isInstanceOf[CorrectValue])
 
@@ -139,16 +130,24 @@ class ValidationService(
     }
   }
 
-  private def sendReportAboutValue(notice: PaymentForValidating, problem: String) {
+  private def sendReportAboutProblem(flowId: String, fileName: String, companyName: String, departmentName: String, payDate: String, problem: String, action: Int): Notice = {
+    val failedValidation = action match {
+      case _ if action == 0 => FailedValidation(problem)
+      case _ if action == 1 => FailedValidation(s"Column with name $problem doesn't have the correct value")
+    }
+
     paymentWriter.writeFile(
       PaymentForReporting(
-        notice.payment.flowId,
-        notice.payment.fileName,
-        notice.payment.companyName,
-        notice.payment.departmentName,
-        notice.payment.payDate,
-        FailedValidation(problem)
+        flowId,
+        fileName,
+        companyName,
+        departmentName,
+        payDate,
+        failedValidation
       )
-    )
+    ) match {
+      case _: Try[SuccessfulSave] => SuccessfulSave()
+      case _: Try[UnsuccessfulSave] => UnsuccessfulSave()
+    }
   }
 }

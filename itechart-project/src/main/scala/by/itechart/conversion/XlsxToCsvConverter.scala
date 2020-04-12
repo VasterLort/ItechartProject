@@ -28,7 +28,7 @@ object XlsxToCsvConverter {
   private def setCellType(cell: Cell): String = {
     cell.getCellType() match {
       case CellType.STRING => cell.getStringCellValue() + Constant.ContentDelimiterOfFile
-      case CellType.NUMERIC => cell.getNumericCellValue() + Constant.ContentDelimiterOfFile
+      case CellType.NUMERIC => cell.getNumericCellValue().toString.replaceAll("\\.0", "") + Constant.ContentDelimiterOfFile
       case CellType.BOOLEAN => cell.getBooleanCellValue() + Constant.ContentDelimiterOfFile
       case CellType.BLANK => Constant.ContentDelimiterOfFile
     }

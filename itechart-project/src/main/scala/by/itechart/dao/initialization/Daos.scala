@@ -8,5 +8,6 @@ object Daos {
   lazy val transformationDao: TransformationDao = new TransformationDao()
   lazy val normalizationDao: NormalizationDao = new NormalizationDao()
   lazy val validationDao: ValidationDao = new ValidationDao()
+  lazy val loadDao: LoadDao = new LoadDao()
   lazy val dictionaryDao: DictionaryDao = new DictionaryDao()
 }

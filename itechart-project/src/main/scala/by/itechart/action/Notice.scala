@@ -92,13 +92,20 @@ case class ValidatedPayments(payments: List[Validation]) extends Notice
 
 case class SuccessfulRequestForValidation(flow: Seq[Validation], message: String = "Request was completed!!!") extends Notice
 
+case class SuccessfulRequestForLoad(flow: Seq[Load], message: String = "Request was completed!!!") extends Notice
+
 case class FailureValidation(message: String = "Validation was failed!!!") extends Notice
 
-case class SuccessfulValidation(message: String = "Successful was failed!!!") extends Notice
+case class SuccessfulValidation(message: String = "Successful!!!") extends Notice
 
 case class FailureValidationList(messages: List[FailureValidation]) extends Notice
 
 case class CorrectValue() extends Notice
 
+case class PreparedPaymentsForLoading(payments: List[Load]) extends Notice
 
+case class FailureLoading() extends Notice
 
+case class Goood(message: String) extends Notice
+
+case class Noooooo(message: String) extends Notice

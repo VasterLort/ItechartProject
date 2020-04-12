@@ -10,6 +10,7 @@ import org.json4s.{DefaultFormats, Extraction}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.Try
 
 class NormalizationService(
                             private val dictionary: Dictionary = new Dictionary(),
@@ -56,28 +57,21 @@ class NormalizationService(
             r._1 -> dictionary(gender)
           case _ => r._1 -> Constant.FalseStatement
         }
-      case r if r._1 == Constant.BirthDate =>
+      case r if r._1 == Constant.WorkingHours ||
+        r._1 == Constant.GrossAmount ||
+        r._1 == Constant.AtAmount =>
         r._2 match {
-          case birthDate if myDate.convert(birthDate).isInstanceOf[CorrectDate] =>
-            r._1 -> myDate.convert(birthDate).asInstanceOf[CorrectDate].date
+          case number if Try(number.toInt).isSuccess =>
+            r._1 -> number
           case _ => r._1 -> Constant.FalseStatement
         }
-      case r if r._1 == Constant.PayDate =>
+      case r if r._1 == Constant.BirthDate ||
+        r._1 == Constant.PayDate ||
+        r._1 == Constant.HireDate ||
+        r._1 == Constant.DismissalDate =>
         r._2 match {
-          case p if myDate.convert(p).isInstanceOf[CorrectDate] =>
-            r._1 -> myDate.convert(p).asInstanceOf[CorrectDate].date
-          case _ => r._1 -> Constant.FalseStatement
-        }
-      case r if r._1 == Constant.HireDate =>
-        r._2 match {
-          case hireDate if myDate.convert(hireDate).isInstanceOf[CorrectDate] =>
-            r._1 -> myDate.convert(hireDate).asInstanceOf[CorrectDate].date
-          case _ => r._1 -> Constant.FalseStatement
-        }
-      case r if r._1 == Constant.DismissalDate =>
-        r._2 match {
-          case dismissalDate if myDate.convert(dismissalDate).isInstanceOf[CorrectDate] =>
-            r._1 -> myDate.convert(dismissalDate).asInstanceOf[CorrectDate].date
+          case anyDate if myDate.convert(anyDate).isInstanceOf[CorrectDate] =>
+            r._1 -> myDate.convert(anyDate).asInstanceOf[CorrectDate].date
           case _ => r._1 -> Constant.FalseStatement
         }
       case r => r._1 -> r._2
