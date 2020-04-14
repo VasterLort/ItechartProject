@@ -1,6 +1,7 @@
 package by.itechart.service
 
 import by.itechart.action._
+import by.itechart.conf.DictionaryConf
 import by.itechart.constant.Constant
 import by.itechart.dao.{Normalization, Transformation}
 import by.itechart.date.MyDate
@@ -66,7 +67,7 @@ class NormalizationService(
           case _ => r._1 -> Constant.FalseStatement
         }
       case r if r._1 == Constant.BirthDate ||
-        r._1 == Constant.PayDate ||
+        r._1 == DictionaryConf.configValues.payDate ||
         r._1 == Constant.HireDate ||
         r._1 == Constant.DismissalDate =>
         r._2 match {

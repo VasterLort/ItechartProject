@@ -62,30 +62,31 @@ class CsvToJsonConverter(
       }
   }
 
-  private def preparePaymentsFile(fileContent: List[Array[String]], head: Array[String], keys: CorrectKeys): Notice = {
+  private def preparePaymentsFile(fileContent: List[Array[String]], head: Array[String], keys: CorrectKeys): ConversionPaymentsSucceed = {
     val res = fileContent
       .drop(Constant.HeadIndex)
       .map { row =>
         row.toList.indices.map { i =>
           head(i) -> row(i)
         }.toMap
-      }.filter(value => (value.contains(keys.value(DictionaryConf.configValues.company)) && value(keys.value(DictionaryConf.configValues.company)).nonEmpty) &&
-      (value.contains(keys.value(DictionaryConf.configValues.department)) && value(keys.value(DictionaryConf.configValues.department)).nonEmpty) &&
-      (value.contains(keys.value(DictionaryConf.configValues.payDate)) && value(keys.value(DictionaryConf.configValues.payDate)).nonEmpty))
+      }
 
-    res match {
-      case list if list.nonEmpty =>
-        ConversionPaymentsSucceed(
-          list.map { map =>
-            Payments(
-              parse(compact(render(Extraction.decompose(map)))),
-              map(keys.value(DictionaryConf.configValues.company)),
-              map(keys.value(DictionaryConf.configValues.department)),
-              map(keys.value(DictionaryConf.configValues.payDate)))
-          }
-        )
-      case _ => ConversionError()
-    }
+    ConversionPaymentsSucceed(
+      res.map { map =>
+        val companyName = if (map.contains(keys.value(DictionaryConf.configValues.company)))
+          map(keys.value(DictionaryConf.configValues.company)) else Constant.FalseStatement
+        val departmentName = if (map.contains(keys.value(DictionaryConf.configValues.department)))
+          map(keys.value(DictionaryConf.configValues.department)) else Constant.FalseStatement
+        val payDate = if (map.contains(keys.value(DictionaryConf.configValues.payDate)))
+          map(keys.value(DictionaryConf.configValues.payDate)) else Constant.FalseStatement
+
+        Payments(
+          parse(compact(render(Extraction.decompose(map)))),
+          companyName,
+          departmentName,
+          payDate)
+      }
+    )
   }
 
   private def convertSinglePaymentToJson(fileContent: List[Array[String]], fileName: String, head: Array[String]): Notice = {
@@ -95,12 +96,7 @@ class CsvToJsonConverter(
 
   private def convertSeveralPaymentToJson(fileContent: List[Array[String]], head: Array[String]): Future[Notice] = {
     getKeys(head).map {
-      case keys: CorrectKeys => {
-        preparePaymentsFile(fileContent, head, keys) match {
-          case notice: ConversionPaymentsSucceed => notice
-          case _ => ConversionError()
-        }
-      }
+      case keys: CorrectKeys => preparePaymentsFile(fileContent, head, keys)
       case _: IncorrectKeys => ConversionError()
     }
   }

@@ -3,6 +3,7 @@ package by.itechart.constant
 object Constant {
   final val ContentDelimiterOfFile = ","
   final val RowDelimiterOfFile = "\r\n"
+  final val JsonDelimiter = "\n"
   final val StartIndex = 0
   final val FileNameIndex = 1
   final val HeadIndex = 1
@@ -19,6 +20,7 @@ object Constant {
   final val BirthDate = "BIRTH_DATE"
   final val HireDate = "HIRE_DATE"
   final val DismissalDate = "DISMISSAL_DATE"
-  final val PayDate = "PAY_DATE"
   final val PostalCode = "POSTAL_CODE"
+  final val EmptyFolder = "Folder is empty"
+  final val Successfully = "File processed successfully!"
 }

@@ -54,7 +54,7 @@ object SftpConnection {
         channel.rm(SftpConf.configValues.sftpPath + fileCsv.name)
         fileCsv
       }
-      case _: InvalidFileName => InvalidFileName()
+      case _: InvalidFileName => InvalidFileName(fileName)
     }
 
     channel.disconnect()
@@ -65,7 +65,7 @@ object SftpConnection {
   private def readPaymentFileName(channel: ChannelSftp): Notice = {
     channel.connect()
     val result = channel.ls(SftpConf.configValues.sftpPath) match {
-      case folder if folder.isEmpty => EmptyFolder()
+      case folder if folder.isEmpty => EmptyFolder(Constant.EmptyFolder)
       case fileNames => PaymentFileName(fileNames)
     }
 
@@ -78,7 +78,7 @@ object SftpConnection {
     paymentFileName.substring(paymentFileName.lastIndexOf(Constant.UselessInfo) + Constant.FileNameIndex) match {
       case fileName if fileName.endsWith(CsvFormat) => CsvPaymentFileName(fileName)
       case fileName if fileName.endsWith(XlsxFormat) => XlsxPaymentFileName(fileName)
-      case _ => InvalidFileName()
+      case _ => InvalidFileName(paymentFileName)
     }
   }
 }

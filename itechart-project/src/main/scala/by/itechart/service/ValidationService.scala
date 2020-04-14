@@ -1,17 +1,14 @@
 package by.itechart.service
 
-import by.itechart.action._
+import by.itechart.action.{ValidatedPayments, _}
+import by.itechart.conf.DictionaryConf
 import by.itechart.constant.Constant
 import by.itechart.dao.{Normalization, Validation}
 import by.itechart.date.MyDate
-import by.itechart.file.PaymentWriter
-import org.json4s.Extraction
 import org.json4s.native.JsonMethods.{compact, parse, render}
-
-import scala.util.Try
+import org.json4s.{DefaultFormats, Extraction}
 
 class ValidationService(
-                         private val paymentWriter: PaymentWriter.type = PaymentWriter,
                          private val myDate: MyDate.type = MyDate
                        ) {
 
@@ -21,28 +18,33 @@ class ValidationService(
   private final val WorkingHours = "WORKING_HOURS"
   private final val GrossAmount = "GROSS_AMOUNT"
   private final val AtAmount = "AT_AMOUNT"
-  private final val CompanyName = "COMPANY_NAME"
   private final val RequiredColumns = 0
   private final val OptionalColumns = 1
+  private final val ColumnAction = 0
+  private final val ValueAction = 1
   private final val NotRequiredColumns = "Missing required columns!!!"
   private final val NotHireDateColumns = "DismissalDate columns cannot be without HireDate columns!!!"
-  private final val IdentificationNumberPattern = "\\w{14}"
+  private final val IdentificationNumberLength = 14
   private final val NumberOfColumnsRequired = 9
 
   def getValidatedPayments(flow: List[Normalization]): Notice = {
-    val validationResult = validatePayments(flow).map {
+    validatePayments(flow).map {
       case notice: PaymentForValidating => checkValues(notice)
-      case notice: PaymentForReporting =>
-        paymentWriter.writeFile(notice) match {
-          case _: Try[SuccessfulSave] => SuccessfulSave()
-          case _: Try[UnsuccessfulSave] => UnsuccessfulSave()
-        }
+      case notice: PaymentForReporting => notice
+    } match {
+      case payments if payments.filter(!_.isInstanceOf[PaymentForValidating]).isEmpty =>
+        ValidatedPayments(payments.map(_.asInstanceOf[PaymentForValidating].payment))
+      case payments => prepareReport(payments.filter(!_.isInstanceOf[PaymentForValidating]))
+    }
+  }
+
+  private def prepareReport(notices: List[Notice]): FailureValidationList = {
+    val list = notices.flatMap {
+      case notice: PaymentForReporting => List(notice)
+      case notice: FailureValidationList => notice.messages
     }
 
-    validationResult.filter(_.isInstanceOf[PaymentForValidating]) match {
-      case payments if payments.isEmpty => FailureValidation()
-      case payments => ValidatedPayments(payments.map(_.asInstanceOf[PaymentForValidating].payment))
-    }
+    FailureValidationList(list)
   }
 
   private def validatePayments(flow: List[Normalization]): List[Notice] = {
@@ -61,7 +63,7 @@ class ValidationService(
             MyDate.getCurrentDate()
           ))
         case notice: FailedValidation =>
-          sendReportAboutProblem(flow(index).flowId, flow(index).fileName, flow(index).companyName, flow(index).departmentName, flow(index).payDate, notice.message, 0)
+          makeReportAboutProblem(flow(index).flowId, flow(index).fileName, flow(index).companyName, flow(index).departmentName, flow(index).payDate, notice.message, ColumnAction)
       }
     }.toList
   }
@@ -81,7 +83,7 @@ class ValidationService(
         payment.contains(FirstName) && payment.contains(LastName) &&
         payment.contains(Constant.BirthDate) && payment.contains(WorkingHours) &&
         payment.contains(GrossAmount) && payment.contains(AtAmount) &&
-        payment.contains(Constant.PayDate) && payment.contains(CompanyName) => action match {
+        payment.contains(DictionaryConf.configValues.payDate) && payment.contains(DictionaryConf.configValues.company) => action match {
         case _ if action == RequiredColumns => CorrectColumnsValidationState(payment)
         case _ if action == OptionalColumns => checkOptionalPaymentColumns(payment)
       }
@@ -104,50 +106,51 @@ class ValidationService(
     val paymentMap = parse(compact(render(payment.content))).extract[Map[String, String]]
 
     val checkedValues = paymentMap.map {
-      case values if (values._1 == Constant.WorkingHours || values._1 == Constant.GrossAmount || values._1 == Constant.AtAmount || values._1 == Constant.Gender) &&
-        values._2 == Constant.FalseStatement =>
-        sendReportAboutProblem(payment.flowId, payment.fileName, payment.companyName, payment.departmentName, payment.payDate, values._1, 1)
-      case values if values._1 == IdentificationNumber && !values._2.matches(IdentificationNumberPattern) =>
-        sendReportAboutProblem(payment.flowId, payment.fileName, payment.companyName, payment.departmentName, payment.payDate, values._1, 1)
+      case values if (values._1 == Constant.Gender || values._1 == Constant.WorkingHours ||
+        values._1 == DictionaryConf.configValues.department || values._1 == Constant.GrossAmount ||
+        values._1 == Constant.AtAmount || values._1 == DictionaryConf.configValues.payDate ||
+        values._1 == DictionaryConf.configValues.company) && (values._2 == Constant.FalseStatement || values._2 == "") =>
+        makeReportAboutProblem(payment.flowId, payment.fileName, payment.companyName, payment.departmentName, payment.payDate, values._1, ValueAction)
+      case values if values._1 == Constant.IdentificationNumber && values._2.length != IdentificationNumberLength =>
+        makeReportAboutProblem(payment.flowId, payment.fileName, payment.companyName, payment.departmentName, payment.payDate, values._1, ValueAction)
       case values if values._1 == Constant.BirthDate && (values._2 == Constant.FalseStatement ||
         myDate.getConvertedDate(values._2).isBefore(myDate.getTheEarliestDate) ||
         myDate.getConvertedDate(values._2).isAfter(myDate.getTheLatestDate)) =>
-        sendReportAboutProblem(payment.flowId, payment.fileName, payment.companyName, payment.departmentName, payment.payDate, values._1, 1)
+        makeReportAboutProblem(payment.flowId, payment.fileName, payment.companyName, payment.departmentName, payment.payDate, values._1, ValueAction)
       case values if values._1 == Constant.HireDate && (values._2 == Constant.FalseStatement ||
         myDate.getConvertedDate(values._2).isBefore(myDate.getConvertedDate(paymentMap(Constant.BirthDate)))) =>
-        sendReportAboutProblem(payment.flowId, payment.fileName, payment.companyName, payment.departmentName, payment.payDate, values._1, 1)
+        makeReportAboutProblem(payment.flowId, payment.fileName, payment.companyName, payment.departmentName, payment.payDate, values._1, ValueAction)
       case values if values._1 == Constant.DismissalDate && (values._2 == Constant.FalseStatement ||
         myDate.getConvertedDate(values._2).isBefore(myDate.getConvertedDate(paymentMap(Constant.HireDate)))) =>
-        sendReportAboutProblem(payment.flowId, payment.fileName, payment.companyName, payment.departmentName, payment.payDate, values._1, 1)
+        makeReportAboutProblem(payment.flowId, payment.fileName, payment.companyName, payment.departmentName, payment.payDate, values._1, ValueAction)
       case values if values._1 == Constant.GrossAmount && values._2.toInt < paymentMap(Constant.AtAmount).toInt =>
-        sendReportAboutProblem(payment.flowId, payment.fileName, payment.companyName, payment.departmentName, payment.payDate, values._1, 1)
+        makeReportAboutProblem(payment.flowId, payment.fileName, payment.companyName, payment.departmentName, payment.payDate, values._1, ValueAction)
       case _ => CorrectValue()
-    }.toList.filter(!_.isInstanceOf[CorrectValue])
+    }.toList
 
     checkedValues match {
-      case _ if checkedValues.isEmpty => notice
-      case _ => FailureValidation()
+      case _ if checkedValues.filter(!_.isInstanceOf[CorrectValue]).isEmpty => notice
+      case _ => FailureValidationList(checkedValues.filter(_.isInstanceOf[PaymentForReporting]).map(_.asInstanceOf[PaymentForReporting]))
     }
   }
 
-  private def sendReportAboutProblem(flowId: String, fileName: String, companyName: String, departmentName: String, payDate: String, problem: String, action: Int): Notice = {
+  private def makeReportAboutProblem(flowId: String, fileName: String, companyName: String, departmentName: String, payDate: String, problem: String, action: Int): PaymentForReporting = {
+    implicit val formats = DefaultFormats
+
     val failedValidation = action match {
-      case _ if action == 0 => FailedValidation(problem)
-      case _ if action == 1 => FailedValidation(s"Column with name $problem doesn't have the correct value")
+      case _ if action == ColumnAction => FailedValidation(problem)
+      case _ if action == ValueAction => FailedValidation(s"Column with name $problem doesn't have the correct value")
     }
 
-    paymentWriter.writeFile(
-      PaymentForReporting(
-        flowId,
-        fileName,
-        companyName,
-        departmentName,
-        payDate,
-        failedValidation
+    PaymentForReporting(
+      Map(
+        "flowId" -> flowId,
+        "fileName" -> fileName,
+        "companyName" -> companyName,
+        "departmentName" -> departmentName,
+        "payDate" -> payDate,
+        "problem" -> failedValidation.message
       )
-    ) match {
-      case _: Try[SuccessfulSave] => SuccessfulSave()
-      case _: Try[UnsuccessfulSave] => UnsuccessfulSave()
-    }
+    )
   }
 }

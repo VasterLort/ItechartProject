@@ -34,7 +34,8 @@ class DatabaseService(
             }
           case _ => Future(FailureRetrieval())
         }
-      case _ => Future.successful(FailureRetrieval())
+      case notice: EmptyFile => Future.successful(notice)
+      case notice: InvalidFileName => Future.successful(notice)
     }
   }
 
@@ -62,14 +63,14 @@ class DatabaseService(
 
   def getTransformationFlowById(flowId: String): Future[Notice] = {
     transformationDao.getById(flowId).map {
-      case res: Seq[Transformation] => SuccessfulRequestForTransformation(res)
+      case res if res.nonEmpty => SuccessfulRequestForTransformation(res)
       case _ => FailureTransformation()
     }
   }
 
   def getTransformationFlowByKeys(flowId: String, companyName: String, departmentName: String, payDate: String): Future[Notice] = {
     transformationDao.getByKeys(flowId, companyName, departmentName, payDate).map {
-      case res: Seq[Transformation] => SuccessfulRequestForTransformation(res)
+      case res if res.nonEmpty => SuccessfulRequestForTransformation(res)
       case _ => FailureTransformation()
     }
   }
@@ -91,14 +92,14 @@ class DatabaseService(
 
   def getNormalizationFlowById(flowId: String): Future[Notice] = {
     normalizationDao.getById(flowId).map {
-      case res: Seq[Normalization] => SuccessfulRequestForNormalization(res)
+      case res if res.nonEmpty => SuccessfulRequestForNormalization(res)
       case _ => FailureNormalization()
     }
   }
 
   def getNormalizationFlowByKeys(flowId: String, companyName: String, departmentName: String, payDate: String): Future[Notice] = {
     normalizationDao.getByKeys(flowId, companyName, departmentName, payDate).map {
-      case res: Seq[Normalization] => SuccessfulRequestForNormalization(res)
+      case res if res.nonEmpty => SuccessfulRequestForNormalization(res)
       case _ => FailureNormalization()
     }
   }
@@ -114,20 +115,20 @@ class DatabaseService(
             }
           case _ => Future(FailureValidation())
         }
-      case _ => Future.successful(FailureValidation())
+      case notice: FailureValidationList => Future.successful(notice)
     }
   }
 
   def getValidationFlowById(flowId: String): Future[Notice] = {
     validationDao.getById(flowId).map {
-      case res: Seq[Validation] => SuccessfulRequestForValidation(res)
+      case res if res.nonEmpty => SuccessfulRequestForValidation(res)
       case _ => FailureValidation()
     }
   }
 
   def getValidationFlowByKeys(flowId: String, companyName: String, departmentName: String, payDate: String): Future[Notice] = {
     validationDao.getByKeys(flowId, companyName, departmentName, payDate).map {
-      case res: Seq[Validation] => SuccessfulRequestForValidation(res)
+      case res if res.nonEmpty => SuccessfulRequestForValidation(res)
       case _ => FailureValidation()
     }
   }
@@ -149,14 +150,14 @@ class DatabaseService(
 
   def getLoadFlowById(flowId: String): Future[Notice] = {
     loadDao.getById(flowId).map {
-      case res: Seq[Load] => SuccessfulRequestForLoad(res)
+      case res if res.nonEmpty => SuccessfulRequestForLoad(res)
       case _ => FailureLoading()
     }
   }
 
   def getLoadFlowByKeys(flowId: String, companyName: String, departmentName: String, payDate: String): Future[Notice] = {
     loadDao.getByKeys(flowId, companyName, departmentName, payDate).map {
-      case res: Seq[Load] => SuccessfulRequestForLoad(res)
+      case res if res.nonEmpty => SuccessfulRequestForLoad(res)
       case _ => FailureLoading()
     }
   }

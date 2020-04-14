@@ -7,6 +7,10 @@ import org.apache.poi.ss.usermodel.{Cell, CellType, Row}
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 
 object XlsxToCsvConverter {
+  private final val OldNumberSymbol = "\\.0"
+  private final val NewNumberSymbol = ""
+
+
   def convert(fileName: String): Notice = {
     val workBook = new XSSFWorkbook(GeneralConf.configValues.resourcePath + fileName)
     val selSheet = workBook.getSheetAt(Constant.StartIndex)
@@ -21,14 +25,16 @@ object XlsxToCsvConverter {
       sb.append(Constant.RowDelimiterOfFile)
     }
 
-    if (sb != null) CsvPaymentFile(sb.toString, fileName)
-    else EmptyFile()
+    sb.toString match {
+      case str if str.isEmpty => EmptyFile(fileName)
+      case str => CsvPaymentFile(str, fileName)
+    }
   }
 
   private def setCellType(cell: Cell): String = {
     cell.getCellType() match {
       case CellType.STRING => cell.getStringCellValue() + Constant.ContentDelimiterOfFile
-      case CellType.NUMERIC => cell.getNumericCellValue().toString.replaceAll("\\.0", "") + Constant.ContentDelimiterOfFile
+      case CellType.NUMERIC => cell.getNumericCellValue().toString.replaceAll(OldNumberSymbol, NewNumberSymbol) + Constant.ContentDelimiterOfFile
       case CellType.BOOLEAN => cell.getBooleanCellValue() + Constant.ContentDelimiterOfFile
       case CellType.BLANK => Constant.ContentDelimiterOfFile
     }

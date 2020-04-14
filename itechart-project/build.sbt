@@ -56,3 +56,8 @@ libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.7.0-M2"
 libraryDependencies += "com.github.tminglei" %% "slick-pg" % "0.19.0"
 
 libraryDependencies += "com.github.tminglei" %% "slick-pg_json4s" % "0.19.0"
+
+libraryDependencies ++= Seq(
+  "com.nulab-inc" %% "scala-oauth2-core" % "1.5.0",
+  "com.nulab-inc" %% "akka-http-oauth2-provider" % "1.4.0"
+)

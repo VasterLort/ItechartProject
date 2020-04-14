@@ -72,7 +72,20 @@ class TransformationService(
               payments(i).columns,
               MyDate.getCurrentDate())
           )
-        case _ => IncorrectDate()
+        case payDate if payDate.isInstanceOf[IncorrectDate] &&
+          payments(i).companyName.trim.nonEmpty &&
+          payments(i).departmentName.trim.nonEmpty =>
+          PreparedTransformedPayment(
+            Transformation(
+              flow.flowId,
+              flow.fileName,
+              payments(i).companyName.trim,
+              payments(i).departmentName.trim,
+              Constant.FalseStatement,
+              payments(i).columns,
+              MyDate.getCurrentDate())
+          )
+        case _ => EmptyRow()
       }
     }.toList.filter(_.isInstanceOf[PreparedTransformedPayment])
 

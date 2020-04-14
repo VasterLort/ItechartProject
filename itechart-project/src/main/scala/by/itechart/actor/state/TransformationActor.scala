@@ -5,14 +5,15 @@ import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import by.itechart.action._
 import by.itechart.constant.{Constant, StateId}
-import by.itechart.service.DatabaseService
+import by.itechart.service.{DatabaseService, ErrorService}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class TransformationActor(
-                           private val ds: DatabaseService = new DatabaseService
+                           private val ds: DatabaseService = new DatabaseService,
+                           private val errorService: ErrorService = new ErrorService
                          ) extends Actor with ActorLogging {
   implicit val timeout = Timeout(Constant.TimeoutSec.seconds)
 
@@ -20,15 +21,25 @@ class TransformationActor(
     case message: RunTransformationState =>
       ds.getTransformationFlowById(message.flowId).flatMap {
         case res: SuccessfulRequestForTransformation =>
-          message.statesToActor(StateId.normalizationId.id) ?
-            PassToNormalizationState(res.flow.toList, message.statesToActor)
+          val response = message.statesToActor(StateId.normalizationId.id) ? PassToNormalizationState(res.flow.toList, message.statesToActor)
+          response.map {
+            case notice: FailureValidationList =>
+              NotEmptyFolderFailure(errorService.getMergedErrors(Seq(notice)))
+            case _ =>
+              NotEmptyFolderSuccessful(errorService.getSuccessfulResult(Constant.Successfully))
+          }
         case _ => Future.successful(FailureRequest())
       }.mapTo[Notice].pipeTo(sender())
     case message: RunTransformationStateByKeys =>
       ds.getTransformationFlowByKeys(message.flowId, message.companyName, message.departmentName, message.payDate).flatMap {
         case res: SuccessfulRequestForTransformation =>
-          message.statesToActor(StateId.normalizationId.id) ?
-            PassToNormalizationState(res.flow.toList, message.statesToActor)
+          val response = message.statesToActor(StateId.normalizationId.id) ? PassToNormalizationState(res.flow.toList, message.statesToActor)
+          response.map {
+            case notice: FailureValidationList =>
+              NotEmptyFolderFailure(errorService.getMergedErrors(Seq(notice)))
+            case _ =>
+              NotEmptyFolderSuccessful(errorService.getSuccessfulResult(Constant.Successfully))
+          }
         case _ => Future.successful(FailureRequest())
       }.mapTo[Notice].pipeTo(sender())
     case message: PassToTransformationState =>

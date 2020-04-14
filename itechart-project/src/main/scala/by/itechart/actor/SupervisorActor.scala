@@ -45,5 +45,8 @@ class SupervisorActor extends Actor with ActorLogging {
     case message: InitNormalizationStateByKeys =>
       (statesToActor(StateId.normalizationId.id) ?
         RunNormalizationStateByKeys(message.flowId, message.companyName, message.departmentName, message.payDate, statesToActor)).mapTo[Notice].pipeTo(sender())
+    case message: InitValidationStateByKeys =>
+      (statesToActor(StateId.validationId.id) ?
+        RunValidationStateByKeys(message.flowId, message.companyName, message.departmentName, message.payDate, statesToActor)).mapTo[Notice].pipeTo(sender())
   }
 }
