@@ -8,14 +8,18 @@ class RetrievalService(
                         val sftpConnection: SftpConnection.type = SftpConnection
                       ) {
   def getPaymentFile(fileName: String): Notice = {
-    checkFormatPaymentFile(sftpConnection.getPaymentFile(fileName))
+    checkFormatPaymentFile(fileName, sftpConnection.getPaymentFile(fileName))
   }
 
-  private def checkFormatPaymentFile(paymentFile: Notice): Notice = {
+  private def checkFormatPaymentFile(fN: String, paymentFile: Notice): Notice = {
     paymentFile match {
       case fileName: CsvPaymentFile => fileName
-      case fileName: XlsxPaymentFileName => XlsxToCsvConverter.convert(fileName.name)
-      case _ => InvalidFileName()
+      case fileName: XlsxPaymentFileName =>
+        XlsxToCsvConverter.convert(fileName.name) match {
+          case notice: CsvPaymentFile => notice
+          case notice: EmptyFile => notice
+        }
+      case _ => InvalidFileName(fN)
     }
   }
 }

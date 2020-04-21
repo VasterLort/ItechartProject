@@ -1,7 +1,7 @@
 package by.itechart.action
 
 import akka.actor.ActorRef
-import by.itechart.dao.{Flow, Retrieval, Transformation}
+import by.itechart.dao._
 
 sealed trait Message
 
@@ -25,6 +25,8 @@ case class InitTransformationStateByKeys(flowId: String, companyName: String, de
 
 case class InitNormalizationStateByKeys(flowId: String, companyName: String, departmentName: String, payDate: String) extends Message
 
+case class InitValidationStateByKeys(flowId: String, companyName: String, departmentName: String, payDate: String) extends Message
+
 case class RunInitializationState(statesToActor: Map[Int, ActorRef]) extends Message
 
 case class RunStartState(flowId: String, statesToActor: Map[Int, ActorRef]) extends Message
@@ -45,6 +47,8 @@ case class RunTransformationStateByKeys(flowId: String, companyName: String, dep
 
 case class RunNormalizationStateByKeys(flowId: String, companyName: String, departmentName: String, payDate: String, statesToActor: Map[Int, ActorRef]) extends Message
 
+case class RunValidationStateByKeys(flowId: String, companyName: String, departmentName: String, payDate: String, statesToActor: Map[Int, ActorRef]) extends Message
+
 case class PassToStartState(fileName: String, statesToActor: Map[Int, ActorRef]) extends Message
 
 case class PassToRetrievalState(flow: Flow, statesToActor: Map[Int, ActorRef]) extends Message
@@ -53,8 +57,8 @@ case class PassToTransformationState(flow: Retrieval, statesToActor: Map[Int, Ac
 
 case class PassToNormalizationState(flow: List[Transformation], statesToActor: Map[Int, ActorRef]) extends Message
 
-case class PassToValidationState(flow: Flow, statesToActor: Map[Int, ActorRef]) extends Message
+case class PassToValidationState(flow: List[Normalization], statesToActor: Map[Int, ActorRef]) extends Message
 
-case class PassToLoadState(flow: Flow, statesToActor: Map[Int, ActorRef]) extends Message
+case class PassToLoadState(flow: List[Validation], statesToActor: Map[Int, ActorRef]) extends Message
 
 case class PassToFinishState(flow: Flow, statesToActor: Map[Int, ActorRef]) extends Message

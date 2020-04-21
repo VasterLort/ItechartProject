@@ -1,0 +1,21 @@
+CREATE TABLE flow_load (
+	record_id BIGSERIAL,
+	flow_id VARCHAR(100) NOT NULL,
+	file_name VARCHAR(100) NOT NULL,
+	company_name VARCHAR(100) NOT NULL,
+	department_name VARCHAR(100) NOT NULL,
+	pay_date VARCHAR(100) NOT NULL,
+	identification_number VARCHAR(20) NOT NULL,
+	first_name VARCHAR(100) NOT NULL,
+	last_name VARCHAR(100) NOT NULL,
+	birth_date DATE NOT NULL,
+	working_hours INT NOT NULL,
+	gross_amount INT NOT NULL,
+	at_amount INT NOT NULL,
+	hire_date DATE,
+	dismissal_date DATE,
+	gender VARCHAR(10),
+	postal_code VARCHAR(100),
+	creation_date VARCHAR(100) NOT NULL,
+	PRIMARY KEY (record_id)
+);

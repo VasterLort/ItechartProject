@@ -5,16 +5,15 @@ import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import by.itechart.action.{FailureRequest, _}
 import by.itechart.constant.{Constant, StateId}
-import by.itechart.dao.Flow
-import by.itechart.date.MyDate
-import by.itechart.service.DatabaseService
+import by.itechart.service.{DatabaseService, ErrorService}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class NormalizationActor(
-                          private val ds: DatabaseService = new DatabaseService()
+                          private val ds: DatabaseService = new DatabaseService,
+                          private val errorService: ErrorService = new ErrorService
                         ) extends Actor with ActorLogging {
   implicit val timeout = Timeout(Constant.TimeoutSec.seconds)
 
@@ -22,15 +21,32 @@ class NormalizationActor(
     case message: RunNormalizationState =>
       ds.getNormalizationFlowById(message.flowId).flatMap {
         case res: SuccessfulRequestForNormalization =>
-          message.statesToActor(StateId.validationId.id) ?
-            PassToValidationState(Flow(res.flow(Constant.StartIndex).flowId, res.flow(Constant.StartIndex).fileName, StateId.validationId.id, MyDate.getCurrentDate()), message.statesToActor)
+          val response = message.statesToActor(StateId.validationId.id) ? PassToValidationState(res.flow.toList, message.statesToActor)
+          response.map {
+            case notice: FailureValidationList =>
+              NotEmptyFolderFailure(errorService.getMergedErrors(Seq(notice)))
+            case _ =>
+              NotEmptyFolderSuccessful(errorService.getSuccessfulResult(Constant.Successfully))
+          }
+        case _ => Future.successful(FailureRequest())
+      }.mapTo[Notice].pipeTo(sender())
+    case message: RunNormalizationStateByKeys =>
+      ds.getNormalizationFlowByKeys(message.flowId, message.companyName, message.departmentName, message.payDate).flatMap {
+        case res: SuccessfulRequestForNormalization =>
+          val response = message.statesToActor(StateId.validationId.id) ? PassToValidationState(res.flow.toList, message.statesToActor)
+          response.map {
+            case notice: FailureValidationList =>
+              NotEmptyFolderFailure(errorService.getMergedErrors(Seq(notice)))
+            case _ =>
+              NotEmptyFolderSuccessful(errorService.getSuccessfulResult(Constant.Successfully))
+          }
         case _ => Future.successful(FailureRequest())
       }.mapTo[Notice].pipeTo(sender())
     case message: PassToNormalizationState =>
       ds.insertNormalizationFlow(message.flow).flatMap {
         case res: SuccessfulRequestForNormalization =>
           message.statesToActor(StateId.validationId.id) ?
-            PassToValidationState(Flow(res.flow(Constant.StartIndex).flowId, res.flow(Constant.StartIndex).fileName, StateId.validationId.id, MyDate.getCurrentDate()), message.statesToActor)
+            PassToValidationState(res.flow.toList, message.statesToActor)
         case _ => Future.successful(FailureRequest())
       }.mapTo[Notice].pipeTo(sender())
   }

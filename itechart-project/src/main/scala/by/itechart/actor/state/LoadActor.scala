@@ -5,6 +5,7 @@ import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import by.itechart.action._
 import by.itechart.constant.{Constant, StateId}
+import by.itechart.dao.Flow
 import by.itechart.date.MyDate
 import by.itechart.service.DatabaseService
 
@@ -19,18 +20,18 @@ class LoadActor(
 
   def receive = {
     case message: RunLoadState =>
-      ds.getFlowById(message.flowId, StateId.loadId.id).flatMap {
-        case res: SuccessfulRequest =>
+      ds.getLoadFlowById(message.flowId).flatMap {
+        case res: SuccessfulRequestForLoad =>
           message.statesToActor(StateId.finishId.id) ?
-            PassToFinishState(res.flow.copy(statusId = StateId.finishId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor)
-        case res: FailureRequest => Future.successful(res)
+            PassToFinishState(Flow(res.flow(Constant.StartIndex).flowId, res.flow(Constant.StartIndex).fileName, StateId.finishId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor)
+        case _ => Future.successful(FailureRequest())
       }.mapTo[Notice].pipeTo(sender())
     case message: PassToLoadState =>
-      ds.insertFlow(message.flow).flatMap {
-        case res: SuccessfulRequest =>
+      ds.insertLoadFlow(message.flow).flatMap {
+        case res: SuccessfulRequestForLoad =>
           message.statesToActor(StateId.finishId.id) ?
-            PassToFinishState(res.flow.copy(statusId = StateId.finishId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor)
-        case res: FailureRequest => Future.successful(res)
+            PassToFinishState(Flow(res.flow(Constant.StartIndex).flowId, res.flow(Constant.StartIndex).fileName, StateId.finishId.id, statusDate = MyDate.getCurrentDate()), message.statesToActor)
+        case _ => Future.successful(FailureRequest())
       }.mapTo[Notice].pipeTo(sender())
   }
 }
